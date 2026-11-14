@@ -24,7 +24,7 @@ built dist\SalvaOPM-Setup.exe
 
 `--demo` runs the real window and engine against `SimFirmware` and `SimSensors`. It needs no administrator rights and changes nothing on the PC. It keeps its state in `dist\demo-state`.
 
-Console switches print nothing in a plain `cmd` window because the exe is a GUI program. Use PowerShell with a pipe:
+The exe is a GUI program that attaches to the console it was started from. In a `cmd` window its output does appear, but when typed at the prompt `cmd` does not wait for it, so the prompt can come back first and the exit code (the number of failed checks for `--selftest`) is lost. PowerShell with a pipe waits and keeps it:
 ```powershell
 & .\dist\SalvaOPM-Setup.exe --selftest | Out-Host
 ```

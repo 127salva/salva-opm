@@ -84,7 +84,7 @@ Power and GPU writes made while the app runs are checked by reading them back, a
 | Start-menu shortcut, Apps entry | `Salva OPM` | setup; removed by uninstall |
 | Settings and log | `C:\ProgramData\SalvaOPM\state.txt`, `log.txt` (256 KB cap). Folder writable by administrators only | changes and events only |
 | PawnIO driver | its official installer 2.2.0, downloaded from its GitHub release, SHA-256 checked, run from the administrators-only folder and deleted | setup, only when missing or older than 2.2.0; uninstall removes it again (PawnIO's own uninstaller) if this setup installed it |
-| OMEN Gaming Hub | **removed at install:** Store app `AD2F1837.OMENCommandCenter`, tasks `OmenInstallMonitor*` and `OmenOverlay*`, folders `Program Files\HP\OmenInstallMonitor` and `\Overlay`; service `HPOmenCap` stopped and disabled | setup |
+| OMEN Gaming Hub | **removed at install:** Store app `AD2F1837.OMENCommandCenter`, tasks `OmenInstallMonitor*` and `OmenOverlay*`, folders `Program Files\HP\OmenInstallMonitor` and `\Overlay`; service `HPOmenCap` stopped and disabled; its running helpers (`OverlayHelper`, `OMENKeyboardRemapper`, `OMENKeyboardRemapLauncher`, `OmenCap`) ended | setup |
 | OGH's background, if it ever returns | ended | app start and every 45 s, except during the wait after Performance |
 | Windows power mode | the AC/DC power-mode setting | on mode changes |
 
