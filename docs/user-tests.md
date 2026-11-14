@@ -40,7 +40,7 @@ Install first: run `SalvaOPM-Setup.exe` → **Update**. After each check, send `
 | # | Check | How | Pass when |
 |---|---|---|---|
 | H1a | **Leaving Performance under load** | FiveM (or the CPU load below) in Performance ≥ 10 min → Balanced → keep playing 5 min | log: `host limits lapsed … PL 0/0` within 3 min of the switch; temperatures fall |
-| H1b | 85 °C rule | load until the CPU sits at 85 °C for over a minute | log: `CPU above 85 C for a minute: fans to maximum`, fans 4800 rpm, then back to the curve under 80 °C |
+| H1b | *(85 °C rule, removed in 2.4.6)* | — | passed on 2.4.2 (H1, H5); the rule no longer exists |
 | H1c | Quick return to Performance | Performance → Balanced → Performance within 15 s | stays Performance; no `switched to Balanced`; a `written again` line is fine |
 | H2 | **Update while in Performance** | Performance → run the setup → **Update** | log after the restart: `start-up: host power limit … letting it lapse`, then `host limits lapsed … PL 0/0` within 3 min |
 | H3 | Repetition (~30 min) | 20 × sleep/wake (some in Performance), 20 × unplug/replug, 30 quick mode changes | no lasting amber line; every mode follows the power rules; no `drift detected` |

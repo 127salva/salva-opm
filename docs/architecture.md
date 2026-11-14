@@ -22,7 +22,7 @@ Ogh.cs           Tasks (Task Scheduler COM), Ogh (OMEN Gaming Hub removal)
 
 Engine.cs        orchestration: applies modes, drives fans, runs guard, heartbeat and governor
 StateMachine.cs  ModeController: which mode is in effect (pure)
-FanCurve.cs      FanCurve, HeatPush (85 °C rule), ThermalGuard (pure)
+FanCurve.cs      FanCurve, ThermalGuard (pure)
 Governor.cs      Performance safety rules: battery drain, chassis temperature (pure)
 
 Firmware.cs      FirmwareRules (allow-list), HpBios (typed, range-checked calls), WmiFirmware (transport)
@@ -38,7 +38,7 @@ SelfCheck.cs     the self-checks
 UI (Ui, Controls, App)
         │ calls                       ▲ Changed event
         ▼                             │
-Engine ──► pure rules (ModeController, FanCurve, HeatPush, ThermalGuard, Governor)
+Engine ──► pure rules (ModeController, FanCurve, ThermalGuard, Governor)
         │
         ▼
 HpBios ──► IFirmware ──► WmiFirmware (real)  │  SimFirmware (tests, demo)

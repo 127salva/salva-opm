@@ -34,7 +34,6 @@ namespace SalvaOPM
         private readonly ModeController _ctl = new ModeController();
         private readonly FanCurve _auto = FanCurve.Auto();
         public readonly ThermalGuard Guard = new ThermalGuard();
-        public readonly HeatPush Push = new HeatPush();
 
         /// <summary>Ends OMEN Gaming Hub's background if it ever comes back (set by the app; null in tests and the demo).</summary>
         public Action KillOgh;
@@ -482,12 +481,8 @@ namespace SalvaOPM
             if (_fanFailures >= 3 && now - _lastFanWrite < 60000) return;   // back off; retry once a minute
             FanCurve curve = ActiveCurve;
             int[] target = curve.Target(_smCpu, _smGpu);
-            bool was = Push.Active;
-            bool push = Push.Tick(_smCpu, now);   // CPU at 85 C or more for a minute: full speed until it is under 80
-            if (push != was) Log(push ? "CPU above 85 C for a minute: fans to maximum" : "CPU back under 80 C: fans back to the curve");
-            if (push) target = new int[] { HpBios.FanMax, HpBios.FanMax };
-            int n1 = immediate || push ? target[0] : curve.Step(_lvlCpu, target[0]);
-            int n2 = immediate || push ? target[1] : curve.Step(_lvlGpu, target[1]);
+            int n1 = immediate ? target[0] : curve.Step(_lvlCpu, target[0]);
+            int n2 = immediate ? target[1] : curve.Step(_lvlGpu, target[1]);
             bool changed = n1 != _lvlCpu || n2 != _lvlGpu;
             bool refresh = now - _lastFanWrite >= FanRefreshMs;          // keep-alive even when steady
             if (changed && !immediate && !refresh && _lvlCpu > 0 && n1 <= _lvlCpu && n2 <= _lvlGpu

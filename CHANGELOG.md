@@ -2,6 +2,10 @@
 
 Versions follow [semantic versioning](https://semver.org). Dates are when the build was made.
 
+## 2.4.6 - 2026-11-14
+### Removed
+- The 85 °C rule (fans to maximum after a minute at 85 °C). 85 °C is a normal working temperature for this CPU, and on the laptop the rule made the fans louder while the CPU stayed at 84–85 °C. The thermal guard still puts both fans at maximum from a CPU of 95 °C (two readings, 10–20 s) until it has been under 85 °C for a minute, in every curve; below that the curve in use decides (Auto reaches 4800 rpm at 90 °C).
+
 ## 2.4.5 - 2026-11-14
 Fixes from a second whole-repository review.
 ### Fixed

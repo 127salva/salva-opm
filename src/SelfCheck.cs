@@ -282,19 +282,6 @@ namespace SalvaOPM
             Check(Same(a.Target(double.NaN, 70), new int[] { 24, 24 }), "Auto: GPU only (CPU unknown) drives both");
             Check(Same(a.Target(40, 40), new int[] { 19, 19 }) && Same(a.Target(75, 40), new int[] { 29, 29 }) && Same(a.Target(80, 40), new int[] { 34, 34 }),
                 "Auto: 1900 rpm up to 60 C, 2900 at 75 C, 3400 at 80 C");
-            HeatPush hp = new HeatPush();
-            bool early = false;
-            for (long t = 0; t <= 55000; t += 5000) early |= hp.Tick(86, t);
-            Check(!early && hp.Tick(86, 60000), "85 C rule: a minute at 85 C or more starts it, not sooner");
-            Check(hp.Tick(82, 65000) && hp.Tick(double.NaN, 70000) && !hp.Tick(79, 75000), "85 C rule: holds until under 80 C; an unknown reading changes nothing");
-            hp = new HeatPush(); early = false;
-            for (long t = 0; t <= 25000; t += 5000) hp.Tick(86, t);
-            hp.Tick(84, 30000);
-            for (long t = 35000; t <= 90000; t += 5000) early |= hp.Tick(86, t);
-            Check(!early && hp.Tick(86, 95000), "85 C rule: a dip below 85 C restarts the minute");
-            hp = new HeatPush(); early = false;
-            for (long t = 0; t <= 55000; t += 5000) hp.Tick(86, t);
-            Check(!hp.Tick(86, 200000), "85 C rule: after a gap (firmware had the fans) the minute starts over");
             bool bounds = true;
             for (int t = -20; t <= 150; t += 3) { int[] v = a.Target(t, 150 - t); if (v[0] < 19 || v[0] > 48 || v[1] < 19 || v[1] > 48) bounds = false; }
             Check(bounds, "every target stays inside 19..48 (never 0..18, never above the fan table)");
@@ -485,11 +472,8 @@ namespace SalvaOPM
             int last = r.Sim.HeldCpu; bool steps = true; now = 0;
             for (int k = 0; k < 12; k++) { now = RunFor(r, now, 5000); if (Math.Abs(r.Sim.HeldCpu - last) > 3) steps = false; last = r.Sim.HeldCpu; }
             Check(steps && r.Sim.HeldCpu == 42 && r.Sim.HeldGpu == 42, "rising temperature: both fans climb at most 3 levels per tick to 4200 rpm");
-            now = RunFor(r, now, 10000);
-            Check(r.Core.Push.Active && r.Sim.HeldCpu == 48 && r.Sim.HeldGpu == 48, "85 C for a minute: fans to 4800 rpm");
-            r.Sens.Cpu = 70;
-            now = RunFor(r, now, 30000);
-            Check(!r.Core.Push.Active && r.Sim.HeldCpu < 48, "under 80 C again: back to the curve");
+            now = RunFor(r, now, 120000);
+            Check(r.Sim.HeldCpu == 42 && r.Sim.HeldGpu == 42 && !r.Core.Guard.Active, "85 C for minutes: the curve's 4200 rpm, no extra rule below the guard");
 
             // ---- the fan choice: Eco and Balanced are always Auto; Performance may use the one custom curve
             r = new Rig(); r.Core.Boot(true, 0);
@@ -709,7 +693,7 @@ namespace SalvaOPM
             long hotSince = -1, lapseSince = -1, perf04Since = -1, ticks = 0;
             long mem0 = -1, mem1 = 0;
             List<string> trail = new List<string>();
-            long[] seen = new long[6];   // ticks in Performance, lapsing, guard, 85 C rule, on battery, failure shown
+            long[] seen = new long[5];   // ticks in Performance, lapsing, guard, on battery, failure shown
             try
             {
                 for (int day = 0; day < 14; day++)
@@ -748,17 +732,18 @@ namespace SalvaOPM
                         if (lapseSince >= 0 && now - lapseSince > Engine.LapseMaxMs + Engine.TickMs) why = "lapse longer than 180 s";
                         perf04Since = sim.Profile == HpBios.ProfilePerformance && !r.Core.InPerformance ? (perf04Since < 0 ? now : perf04Since) : -1;
                         if (perf04Since >= 0 && now - perf04Since > Engine.LapseMaxMs) why = "profile 0x04 without Performance for 3 minutes";
-                        bool hot = r.Sens.Cpu >= 85 && !r.Core.FansByBios && !r.Core.FanControlLost;
+                        // the thermal guard: CPU at 95 C or more (on battery and during a lapse too) puts the fans at maximum;
+                        // 40 s = two guard readings (20 s) plus one failed write retried at the next reading, with margin
+                        bool hot = r.Sens.Cpu >= 95 && !r.Core.FanControlLost;
                         hotSince = hot ? (hotSince < 0 ? now : hotSince) : -1;
-                        if (hotSince >= 0 && now - hotSince >= 90000 && sim.FansNow()[0] != HpBios.FanMax)
-                            why = "CPU at 85 C for 90 s and the fans not at maximum (fans " + sim.FansNow()[0] + ", levels " + r.Core.Levels[0] + ", push " + r.Core.Push.Active
+                        if (hotSince >= 0 && now - hotSince >= 40000 && sim.FansNow()[0] != HpBios.FanMax)
+                            why = "CPU at 95 C for 40 s and the fans not at maximum (fans " + sim.FansNow()[0] + ", levels " + r.Core.Levels[0]
                                 + ", guard " + r.Core.Guard.Active + ", sim byBios " + sim.FansByBios + ", fault " + r.Core.Fault + ")";
                         if (r.Core.InPerformance) seen[0]++;
                         if (r.Core.Lapsing) seen[1]++;
                         if (r.Core.Guard.Active) seen[2]++;
-                        if (r.Core.Push.Active) seen[3]++;
-                        if (!ac) seen[4]++;
-                        if (r.Core.Failed) seen[5]++;
+                        if (!ac) seen[3]++;
+                        if (r.Core.Failed) seen[4]++;
                         if (why != null) { bad++; if (firstBad == null) { firstBad = "day " + day + " t " + now + ": " + why; foreach (string s in trail) Console.WriteLine(s); } }
                     }
                     r.Core.Exit(false);
@@ -771,7 +756,7 @@ namespace SalvaOPM
             catch (Exception e) { bad++; firstBad = "exception: " + e.Message; }
             Check(bad == 0, "endurance: 14 simulated days (" + ticks + " ticks) keep every invariant" + (firstBad == null ? "" : "; first: " + firstBad));
             bool all = true; foreach (long n in seen) if (n < 100) all = false;
-            Check(all, "endurance: the run covered Performance, lapses, the guard, the 85 C rule, battery and failures ("
+            Check(all, "endurance: the run covered Performance, lapses, the guard, battery and failures ("
                 + string.Join("/", Array.ConvertAll(seen, x => x.ToString())) + " ticks)");
             Check(mem1 - mem0 < 1024 * 1024,"endurance: memory does not grow from day 1 to day 14 (" + (mem1 - mem0) / 1024 + " KB)");
         }
