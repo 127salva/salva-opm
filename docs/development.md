@@ -22,7 +22,7 @@ built dist\SalvaOPM-Setup.exe
 | Try the app | `build.cmd app` then `dist\SalvaOPM-Setup.exe --demo` |
 | Full build | `build.cmd` |
 
-`--demo` runs the real window and engine against `SimFirmware` and `SimSensors`. It needs no administrator rights and changes nothing on the PC. It keeps its state in `dist\demo-state`.
+`--demo` runs the real window and engine against `SimFirmware` and `SimSensors`. It needs no administrator rights and changes no Windows setting; it keeps its state and log in `dist\demo-state`.
 
 The exe is a GUI program that attaches to the console it was started from. In a `cmd` window its output does appear, but when typed at the prompt `cmd` does not wait for it, so the prompt can come back first and the exit code (the number of failed checks for `--selftest`) is lost. PowerShell with a pipe waits and keeps it:
 ```powershell

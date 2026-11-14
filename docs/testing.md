@@ -22,7 +22,7 @@ Both print `self-check: N passed, 0 failed` and return the number of failures as
 | `FirmwareTests` | the allow-list for every type 0–255 and several sizes; value ranges; simulator behaviour |
 | `CoreTests` | the Engine end to end against the simulator: apply order, read-back and rollback, Performance kept for 10 minutes, lapse after Performance and at start-up, TDP changed after a GPU write, fans to firmware on battery or without a temperature, fans not following, crash, exit, conflicts, fail safe, monitoring-only writes nothing |
 | `SettingsTests` | round trip, bad values ignored, older curves raised to the lower bound |
-| `EnduranceTests` | 14 simulated days (one session per day, sometimes restarted within seconds like an update) with random load, unplugging, sleep, mode changes, missing temperatures and 1 % failing BIOS calls. Every 5 s: PL within 45..80, never Performance on battery or saved, every lapse over within 180 s, profile `0x04` never left behind, fans at maximum after 90 s at 85 °C, and no memory growth from day 1 to day 14. Fixed seed, so a failure repeats |
+| `EnduranceTests` | 14 simulated days (one session per day, sometimes restarted within seconds like an update) with random load, unplugging, sleep, mode changes, missing temperatures and 1 % failing BIOS calls. Every 5 s: PL within 45..80, never Performance on battery or saved, every lapse over within 180 s (time with the thermal guard on does not count: the guard restarts the wait), profile `0x04` never left behind, fans at maximum after 90 s at 85 °C, and no memory growth from day 1 to day 14. Fixed seed, so a failure repeats |
 
 The simulator (`SimFirmware`) encodes behaviour measured on the laptop: concurrent TDP only applies under profile `0x04`; host state lapses about 110 s after the last refresh; fan levels are ignored while the firmware has the fans.
 
@@ -31,7 +31,7 @@ The simulator (`SimFirmware`) encodes behaviour measured on the laptop: concurre
 |---|---|
 | The real firmware, driver and sensors | `docs/user-tests.md`, run on the laptop; results recorded in `docs/hardware/evidence.md` |
 | Install, update, uninstall, the PawnIO download | by hand on the laptop (`docs/user-tests.md` H4, H6) |
-| Memory and handles of the real process over days | sampling the installed app (`docs/user-tests.md` H5) |
+| Memory and handles of the real process over hours | sampling the installed app for 8 hours (`docs/user-tests.md` H5) |
 | The window (drawing, dragging) | by eye in `--demo` |
 | OMEN key, sleep and resume | by hand on the laptop |
 | Other BIOS versions | none: only `F.13` is validated; the app warns on any other |

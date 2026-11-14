@@ -6,7 +6,7 @@ Log: `C:\ProgramData\SalvaOPM\log.txt` (events only; the previous file is `log.t
 | Message | Meaning | What to do |
 |---|---|---|
 | `Monitoring only: …` | The laptop is not an OMEN 16-ap0 with board 8E35, or its identity could not be read. Nothing is written. | Nothing: by design. |
-| `could not apply … (the BIOS did not answer)` | A BIOS call failed, often right after waking. | Wait: it retries within 45 s. If it stays, restart the PC. |
+| `could not apply … (the BIOS did not answer)` | A BIOS call failed, often right after waking. | Wait: it retries at the next 45 s heartbeat (after the wait that follows Performance, if one is running). If it stays, restart the PC. |
 | `Thermal guard: fans at maximum` | CPU ≥ 95 °C, ambient ≥ 62 °C, or fans stalled while warm. | Let it cool. It releases after a minute below 85 / 54 °C. Check vents and load. |
 | `Fans handed to the firmware: …` | Fan writes were refused, or the fans did not follow them. The firmware's own curve is in charge for this session. | Safe. Restart the app to try again; send the log if it repeats. |
 | `No CPU temperature: the firmware drives the fans` | PawnIO is missing (e.g. the setup ran without internet), not started yet, or failing. | Restart Windows once after installing. Then run the setup → Update while online. |
@@ -14,7 +14,7 @@ Log: `C:\ProgramData\SalvaOPM\log.txt` (events only; the previous file is `log.t
 | `GPU power preset not accepted by the firmware` | The GPU record read back differently. | Switch mode once. Send the log if it repeats. |
 | `BIOS … is not the validated F.13` | A different BIOS version. | Repeat the checks in `docs/user-tests.md`. |
 | `another tool keeps changing the firmware …; switched to Balanced` | Something else overwrote Performance's limits four times. | Close other tuning tools; check that OMEN Gaming Hub is not back. |
-| `Performance needs the charger connected` | Performance was chosen on battery. | Plug in the original charger. |
+| `Performance needs the charger connected` | Performance was chosen on battery, or with a charger below the laptop's requirement. | Plug in the original charger. |
 
 ## Common questions
 **Performance is greyed out.** On battery, or the charger is weaker than the laptop requires.
