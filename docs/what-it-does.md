@@ -72,7 +72,7 @@ Through Windows' own WMI channel `root\wmi hpqBIntM`. Packet = `"SECU"` + comman
 | 0x20008 | 53 | read | `0, 4, 0, 0` | BIOS thermal-throttling flag |
 | 1 | 15 | read | 4 zero bytes | charger status |
 
-Power and GPU writes are checked by reading them back, and fan writes by reading the fan speeds; the firmware has no read for the thermal profile. Out-of-range values make `HpBios` throw instead of being clamped; the fan curve keeps its own targets inside 19..48 before they get there. The graphics (MUX) mode is never read or written.
+Power and GPU writes are checked by reading them back, and fan writes by reading the fan speeds (from 2500 rpm up, over a minute); the firmware has no known read for the thermal profile. Out-of-range values make `HpBios` throw instead of being clamped; the fan curve keeps its own targets inside 19..48 before they get there. The graphics (MUX) mode is never read or written.
 
 **Wrong laptop:** anything but an OMEN 16-ap0 with board `8E35` and the setup refuses to install. If the app starts and the model or board does not match (or the identity cannot be read), it only monitors and writes nothing. A BIOS other than the validated `F.13` shows a warning.
 
