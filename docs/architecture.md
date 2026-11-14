@@ -5,8 +5,8 @@ One Windows process, one thread for all hardware work. The app never uses the ne
 ## Stack
 | Choice | Why |
 |---|---|
-| C# 5 on .NET Framework 4.8, WinForms | Both ship with Windows 10/11, and so does the compiler (`csc.exe`). Nothing to install to build or run. |
-| HP BIOS WMI interface (`root\wmi`, class `hpqBIntM`) | The same channel OMEN Gaming Hub uses; served by Windows' own ACPI-WMI driver. |
+| C# 5 on .NET Framework 4.8, WinForms | Both ship with Windows 11 and Windows 10 1903 or later, and so does the compiler (`csc.exe`). Nothing to install to build or run. |
+| HP BIOS WMI interface (`root\wmi`, class `hpqBIntM`) | The BIOS interface OMEN Gaming Hub also talks to (OGH goes through HP's driver or the `HPOmenCap` service; this app calls the WMI class directly), served by Windows' own ACPI-WMI driver. |
 | PawnIO + `AMDFamily17` module | The only way to read the CPU die temperature on this laptop without a driver of our own. |
 | NVIDIA `nvml.dll` | GPU temperature and load without starting a process. |
 | Task Scheduler logon task, highest privileges | The BIOS interface needs administrator rights; a task avoids a prompt at every logon. |

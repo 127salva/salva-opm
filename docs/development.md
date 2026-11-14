@@ -1,7 +1,7 @@
 # Development
 
 ## Requirements
-- Windows 10 or 11, x64. The compiler is `%SystemRoot%\Microsoft.NET\Framework64\v4.0.30319\csc.exe` (part of Windows).
+- Windows 11, or Windows 10 1903 or later, x64 (they include .NET Framework 4.8). The compiler is `%SystemRoot%\Microsoft.NET\Framework64\v4.0.30319\csc.exe` (part of Windows).
 - No SDK, no package manager, no environment variables, no download.
 
 ## First build
