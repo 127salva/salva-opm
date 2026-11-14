@@ -12,7 +12,7 @@ One page:
 - **Info line:** CPU and GPU temperature and fan speeds on the left, the version on the right.
 - **Warning line:** amber, above the curve, only when something is wrong.
 
-Closing the window keeps the app in the tray. The tray diamond shows the mode (green Eco, grey Balanced, red Performance); hovering it shows temperatures and fan speeds. Right-click: Open, the three modes, Exit. The OMEN key opens and hides the window.
+Closing the window keeps the app in the tray. The tray diamond shows the mode (green Eco, grey Balanced, red Performance); hovering it shows temperatures and fan speeds, or the current warning when there is one. Right-click: Open, the three modes, Exit. The OMEN key opens and hides the window.
 
 ## The modes
 | | Eco | Balanced | Performance (needs the charger) |
@@ -43,7 +43,7 @@ Closing the window keeps the app in the tray. The tray diamond shows the mode (g
 - **Custom** (Performance only) = one curve, 7 points at 60, 65, 70, 75, 80, 85, 90 °C. Below 60 °C the 60 °C value applies, above 90 °C the 90 °C value.
   - Each fan follows it from its own chip (CPU fan from CPU, GPU fan from GPU). While the GPU sleeps, both follow the CPU.
   - Limits: 1900–4800 rpm, never falling as it gets hotter, and from 75 °C up never below 2900 rpm (OGH's own lower bound for this board).
-- **Movement:** every 5 s, at most 300 rpm per step. Fans never stop.
+- **Movement:** every 5 s, at most 300 rpm per step. A mode change, the 85 °C rule and the thermal guard set the new level at once. While the app drives them, the fans never stop.
 - **85 °C rule** (Auto and Custom): CPU at 85 °C or more for a minute → both fans to 4800 rpm until it is under 80 °C.
 - **Firmware takes the fans** (its own curve) when:
   - on battery;
