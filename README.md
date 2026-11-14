@@ -11,7 +11,7 @@ A small Windows app that replaces OMEN Gaming Hub's performance control on one l
 - A quiet automatic fan curve in every mode, and a custom 7-point curve in Performance.
 - A thermal guard, an 85 °C rule, and battery-drain and chassis-temperature rules. When something is off, the firmware gets control back.
 - Unplugging switches to Eco and plugging back in switches to Balanced. Performance never survives a restart.
-- One file, `SalvaOPM-Setup.exe`, installs, updates and uninstalls. The app never uses the network; the setup uses it once, to download PawnIO when it is missing.
+- One file, `SalvaOPM-Setup.exe`, installs, updates and uninstalls. The app never uses the network; the setup uses it once, to download PawnIO when it is missing or older than 2.2.0.
 
 The full account of every firmware call and every change to the PC is in [docs/what-it-does.md](docs/what-it-does.md).
 

@@ -1,6 +1,6 @@
 # Architecture
 
-One Windows process, one thread for all hardware work. The app never uses the network; the setup downloads the pinned PawnIO installer once when PawnIO is missing. It is the installer, the app and its diagnostic tools in a single exe.
+One Windows process, one thread for all hardware work. The app never uses the network; the setup downloads the pinned PawnIO installer once when PawnIO is missing or older than 2.2.0. It is the installer, the app and its diagnostic tools in a single exe.
 
 ## Stack
 | Choice | Why |
@@ -62,7 +62,7 @@ The Engine never touches WMI, drivers or Windows directly; everything goes throu
 - **Lapse after Performance.** Power limits cannot be cleared by a write, only by letting them lapse. After Performance the app stays silent for 125 s with the firmware driving the fans.
 - **Lapse at start-up too.** A host power limit found at start (the previous session ended moments ago: update, crash) is left to lapse the same way.
 - **Fail safe.** An unexpected error hands fans and power to the firmware and stops every write until the app restarts.
-- **Fail closed on identity.** On anything but a 16-ap0 with board `8E35` the setup refuses to install, and the app only monitors. The uninstall's firmware restore checks the same.
+- **Fail closed on identity.** On anything but a 16-ap0 with board `8E35` the setup refuses to install, and the app only monitors. The uninstall's firmware restore is skipped only on a laptop positively identified as another model; when the identity cannot be read it still restores, because the GPU record does not lapse by itself.
 - **One copy per PC.** A machine-wide lock (`Global\SalvaOPM`) keeps a second Windows session from running a second copy.
 - **Saved mode is never Performance.** A restart always comes back in Eco or Balanced.
 - **The GPU record is put back by the app.** Unlike power limits it does not lapse: exit and fail safe write Boost, the next start writes the preset of its mode; uninstall writes the record read at first start.

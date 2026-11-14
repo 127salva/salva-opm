@@ -1,6 +1,6 @@
 # Salva OPM 2.4.7: what it does (and doesn't)
 
-Everything Salva OPM touches on the HP OMEN 16-ap0 with board 8E35. Source: `src/` (plain C#, built by `build.cmd` with Windows' own compiler). The one file to run is `dist\SalvaOPM-Setup.exe`. The app works offline; the setup needs internet once, only if PawnIO is not installed yet.
+Everything Salva OPM touches on the HP OMEN 16-ap0 with board 8E35. Source: `src/` (plain C#, built by `build.cmd` with Windows' own compiler). The one file to run is `dist\SalvaOPM-Setup.exe`. The app works offline; the setup needs internet once, only if PawnIO is missing or older than 2.2.0.
 
 Its logic follows Ohman (github.com/P4R1H/Ohman, GPL-3.0), except the Auto fan curve, which is the owner's quiet one. Performance keeps the values verified on this laptop (`docs/hardware/evidence.md`).
 
@@ -83,12 +83,12 @@ Every write is checked by reading back. Out-of-range values throw; nothing is cl
 | Logon task | `SalvaOPM` (your logon, highest privileges) | setup; removed by uninstall |
 | Start-menu shortcut, Apps entry | `Salva OPM` | setup; removed by uninstall |
 | Settings and log | `C:\ProgramData\SalvaOPM\state.txt`, `log.txt` (256 KB cap). Folder writable by administrators only | changes and events only |
-| PawnIO driver | its official installer 2.2.0, downloaded from its GitHub release, SHA-256 checked, run from the administrators-only folder and deleted | setup, only when missing; uninstall removes it again (PawnIO's own uninstaller) if this setup installed it |
+| PawnIO driver | its official installer 2.2.0, downloaded from its GitHub release, SHA-256 checked, run from the administrators-only folder and deleted | setup, only when missing or older than 2.2.0; uninstall removes it again (PawnIO's own uninstaller) if this setup installed it |
 | OMEN Gaming Hub | **removed at install:** Store app `AD2F1837.OMENCommandCenter`, tasks `OmenInstallMonitor*` and `OmenOverlay*`, folders `Program Files\HP\OmenInstallMonitor` and `\Overlay`; service `HPOmenCap` stopped and disabled | setup |
 | OGH's background, if it ever returns | ended | app start and every 45 s |
 | Windows power mode | the AC/DC power-mode setting | on mode changes |
 
-Salva OPM has no service of its own, no telemetry and no auto-update. The app never uses the network; the setup downloads PawnIO once, only when it is missing.
+Salva OPM has no service of its own, no telemetry and no auto-update. The app never uses the network; the setup downloads PawnIO once, only when it is missing or older than 2.2.0.
 
 ## What each outside piece is, and how it was checked
 | Piece | Source | Checked |

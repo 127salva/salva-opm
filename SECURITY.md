@@ -15,7 +15,7 @@ The app runs elevated (a logon task with highest privileges) because the HP BIOS
 | Elevated setup | Once its own code runs, DLLs load from System32 only (`SetDefaultDllDirectories`; the .NET runtime itself loads before that, see Known limits); helper programs are started by full path; nothing elevated is written to the user's TEMP; the install stops if the data folder cannot be made administrators-only. |
 | Settings | `C:\ProgramData\SalvaOPM` is writable by administrators and SYSTEM only. Every value is validated on load. |
 | Native libraries | `nvml.dll` is loaded by full path from `System32`, never from the app folder. |
-| Network | The app: none. The setup: one HTTPS download of the pinned PawnIO release, only when PawnIO is missing. No update check, no telemetry. |
+| Network | The app: none. The setup: one HTTPS download of the pinned PawnIO release, only when PawnIO is missing or older than 2.2.0. No update check, no telemetry. |
 | Single instance | One copy per PC (`Global\SalvaOPM`), so two Windows sessions never write to the firmware at once. |
 | Unexpected errors | Fail safe: fans and power go back to the firmware and nothing more is written until the app restarts. |
 | Other processes | Ends OMEN Gaming Hub's background processes by name; removes its Store package, tasks and helper folders at install. |
