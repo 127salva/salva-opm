@@ -37,5 +37,5 @@ PowerShell as administrator:
 
 ## Recovery
 - **Any doubt about heat or fans:** run the setup → **Uninstall**. The firmware takes the fans, GPU and power back at once.
-- **The app will not start or uninstall:** restart Windows. Nothing the app sets survives a restart without the app. Then delete the task `SalvaOPM` in Task Scheduler, and the folders `C:\Program Files\Salva OPM` and `C:\ProgramData\SalvaOPM`.
+- **The app will not start or uninstall:** restart Windows. Without the app, power limits, profile and fan control lapse within about two minutes (measured). The GPU record and concurrent TDP are put back by the app at its next start, or by Uninstall. Then delete the task `SalvaOPM` in Task Scheduler, and the folders `C:\Program Files\Salva OPM` and `C:\ProgramData\SalvaOPM`.
 - **Safe Mode** does not start the app.

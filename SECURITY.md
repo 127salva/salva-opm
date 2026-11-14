@@ -9,7 +9,7 @@ The app runs elevated (a logon task with highest privileges) because the HP BIOS
 | Area | Practice |
 |---|---|
 | Firmware calls | Only the pairs in `FirmwareRules` (`src/Firmware.cs`) can be sent; a self-check proves nothing else passes. Values are range-checked and read back. |
-| Wrong hardware | Board other than `8E35`: monitoring only, no writes. |
+| Wrong hardware | Anything but an OMEN 16-ap0 with board `8E35`: the setup refuses to install. If the identity does not match when the app starts (or cannot be read): monitoring only, no writes. |
 | Kernel driver | PawnIO's official signed build. The app loads one signed module and calls one read function (`ioctl_read_smn`). No port, MSR or EC access. |
 | PawnIO installer | Not shipped. The setup downloads the pinned release over HTTPS into memory, checks its SHA-256 (`Setup.PawnIoSha256`), writes it to the administrators-only data folder and runs it from there, so no user-level process can swap it after the check. |
 | Elevated setup | Once its own code runs, DLLs load from System32 only (`SetDefaultDllDirectories`; the .NET runtime itself loads before that, see Known limits); helper programs are started by full path; nothing elevated is written to the user's TEMP; the install stops if the data folder cannot be made administrators-only. |
