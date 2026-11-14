@@ -8,7 +8,7 @@ A Windows tray app that replaces OMEN Gaming Hub's performance control on **one 
 - What is proven on hardware, what only in the simulator, what never happened: the table "Every feature: how it is checked" in `docs/testing.md`.
 - Releases: GitHub releases of `127salva/salva-opm`; the first public one was v2.4.3; each release has a tag `vX.Y.Z` and its SHA-256 in the release notes. If the tag of the version in `src/Setup.cs` is missing, that version has not been published yet.
 - Open points, none blocking:
-  - never observed on the laptop: thermal guard, battery-drain rule, chassis 54 °C rule, fail safe, behaviour after a BIOS update (the feature table in `docs/testing.md` is the full list);
+  - never observed on the laptop: battery-drain rule, chassis 54 °C rule, fail safe, behaviour after a BIOS update (the feature table in `docs/testing.md` is the full list);
   - private memory of the running app grows ~0.3 MB/h while idle (accepted: it starts fresh at every Windows start);
   - PawnIO's own uninstaller leaves its signed driver package in the Windows driver store;
   - the exe is not code-signed (SmartScreen warns; the release publishes the SHA-256).
