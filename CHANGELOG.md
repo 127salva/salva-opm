@@ -2,6 +2,19 @@
 
 Versions follow [semantic versioning](https://semver.org). Dates are when the build was made.
 
+## 2.4.4 - 2026-11-14
+Fixes from a whole-repository review.
+### Fixed
+- A thermal guard that engaged in the two minutes after leaving Performance refreshed the old 55 W limit with its fan writes; the app then gave up waiting ("did not lapse") and held the limit until restart. The wait now pauses while the guard is on and starts again when it ends.
+- The CPU temperature is tried again once a minute when the PawnIO driver was not ready at logon (before: firmware fans for the whole session).
+- An idle GPU is read at once when it wakes up or the CPU heats up quickly, instead of up to 30 s later.
+### Security
+- The data folder is created with its permissions in one step and checked afterwards; a folder or link planted in between is refused, never given new permissions.
+### Removed
+- Clean-up of version 1 ("OmenModes", never published) and of a result file left in TEMP by setups before 2.4.
+### Docs
+- On another laptop the setup refuses to install (the README said the app would only monitor).
+
 ## 2.4.3 - 2026-11-13
 ### Added
 - The version is shown at the bottom right of the window, opposite the temperatures and fan speeds.

@@ -125,6 +125,7 @@ namespace SalvaOPM
 
         public SystemSensors()
         {
+            _nextCpuOpenMs = DateTime.UtcNow.Ticks / 10000 + 60000;
             OpenCpu();
             _nvDevice = FindNvidiaDevice();
             if (_nvDevice == null) _gpuStatus = "no NVIDIA GPU found";
@@ -150,13 +151,22 @@ namespace SalvaOPM
 
         public void Poll()
         {
+            double was = _cpuTemp;
             ReadCpu();
+            if (_cpuTemp >= was + 5) _nextGpuMs = 0;   // load is starting: read an idle GPU now, not up to 30 s later
             ReadGpu();
         }
 
+        private long _nextCpuOpenMs;
+
         private void ReadCpu()
         {
-            if (_cpu == null) { _cpuTemp = double.NaN; return; }
+            if (_cpu == null)
+            {
+                long now = DateTime.UtcNow.Ticks / 10000;
+                if (now >= _nextCpuOpenMs) { _nextCpuOpenMs = now + 60000; OpenCpu(); }   // the driver may not be ready at logon: try again once a minute
+                if (_cpu == null) { _cpuTemp = double.NaN; return; }
+            }
             double t = double.NaN;
             bool held = false;
             try
@@ -252,8 +262,8 @@ namespace SalvaOPM
                 _gpuStatus = "NVIDIA GPU asleep";
                 return;
             }
-            _asleep = false;
-            if (now < _nextGpuMs) return;                       // an idle GPU is read every 30 s, a busy one every tick
+            if (_asleep) { _asleep = false; _nextGpuMs = 0; }   // just woke up: read it now
+            if (now < _nextGpuMs) return;                      // an idle GPU is read every 30 s, a busy one every tick
             try
             {
                 if (!_nvmlLoaded)

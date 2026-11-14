@@ -18,7 +18,7 @@ using Microsoft.Win32;
 namespace SalvaOPM
 {
     /// <summary>
-    /// Install and uninstall, all from this one exe (SalvaOPM-Setup.exe). Install: removes v1 (OmenModes), copies itself to
+    /// Install and uninstall, all from this one exe (SalvaOPM-Setup.exe). Install: copies itself to
     /// Program Files\Salva OPM, downloads the official PawnIO installer when PawnIO is missing (pinned release, SHA-256
     /// checked, run from the administrators-only data folder), registers the logon task, a Start-menu shortcut and an Apps
     /// entry, removes OMEN Gaming Hub and starts the app. Uninstall puts the firmware back (profile 0x30 with fans by BIOS,
@@ -28,7 +28,7 @@ namespace SalvaOPM
     public static class Setup
     {
         public const string TaskName = "SalvaOPM";
-        public const string Version = "2.4.3";
+        public const string Version = "2.4.4";
         public const string PawnIoUrl = "https://github.com/namazso/PawnIO.Setup/releases/download/2.2.0/PawnIO_setup.exe";
         public const string PawnIoSha256 = "1F519A22E47187F70A1379A48CA604981C4FCF694F4E65B734AAA74A9FBA3032";
         private const string UninstallKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\SalvaOPM";
@@ -74,14 +74,19 @@ namespace SalvaOPM
                     if (link) Directory.Delete(dir);   // removes the link itself, never its target
                     else if (!admins.Equals(owner) && !system.Equals(owner)) Directory.Delete(dir, true);
                 }
-                Directory.CreateDirectory(dir);
                 DirectorySecurity sec = new DirectorySecurity();
                 sec.SetOwner(admins);
                 sec.SetAccessRuleProtection(true, false);
                 InheritanceFlags inh = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
-                sec.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null), FileSystemRights.FullControl, inh, PropagationFlags.None, AccessControlType.Allow));
-                sec.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null), FileSystemRights.FullControl, inh, PropagationFlags.None, AccessControlType.Allow));
+                sec.AddAccessRule(new FileSystemAccessRule(system, FileSystemRights.FullControl, inh, PropagationFlags.None, AccessControlType.Allow));
+                sec.AddAccessRule(new FileSystemAccessRule(admins, FileSystemRights.FullControl, inh, PropagationFlags.None, AccessControlType.Allow));
                 sec.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null), FileSystemRights.ReadAndExecute, inh, PropagationFlags.None, AccessControlType.Allow));
+                // created with its permissions in one call; a folder or link planted since the check above is refused, and
+                // never given new permissions (on a link they would land on whatever it points to)
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir, sec);
+                DirectoryInfo d = new DirectoryInfo(dir);
+                IdentityReference o = d.GetAccessControl(AccessControlSections.Owner).GetOwner(typeof(SecurityIdentifier));
+                if ((d.Attributes & FileAttributes.ReparsePoint) != 0 || (!admins.Equals(o) && !system.Equals(o))) return false;
                 Directory.SetAccessControl(dir, sec);
                 return true;
             }
@@ -112,7 +117,6 @@ namespace SalvaOPM
             }
             try
             {
-                RemoveV1(log);
                 StopRunning();
                 Directory.CreateDirectory(InstallDir);
                 if (!RunningInstalled()) CopyWithRetry(Application.ExecutablePath, InstalledExe);
@@ -148,19 +152,6 @@ namespace SalvaOPM
         /// <summary>Where an elevated install leaves its one-line result for the setup window: the administrators-only data
         /// folder (users read it), never the user's TEMP, where a planted link could redirect an elevated write.</summary>
         public static string ResultFile() { return Path.Combine(Settings.DefaultDirectory(), "setup-result.txt"); }
-
-        /// <summary>v1 (OmenModes): stop and delete its task, end it, delete its folders. It held nothing the firmware keeps.</summary>
-        private static void RemoveV1(Logger log)
-        {
-            Tasks.Stop("OmenModes");
-            bool had = Tasks.Delete("OmenModes");
-            foreach (Process p in Process.GetProcessesByName("OmenModes")) using (p) { try { p.Kill(); p.WaitForExit(3000); } catch (Exception) { } }
-            string pf = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "OmenModes");
-            string pd = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "OmenModes");
-            try { if (Directory.Exists(pf)) Directory.Delete(pf, true); } catch (Exception) { }
-            try { if (Directory.Exists(pd)) Directory.Delete(pd, true); } catch (Exception) { }
-            if (had) log.Write("removed v1 (OmenModes)");
-        }
 
         /// <summary>Ends the running app (its task, then any other SalvaOPM process but this one). Ended on purpose, so its
         /// "still running" flag goes too.</summary>
@@ -210,6 +201,7 @@ namespace SalvaOPM
             string file = Path.Combine(dir, "PawnIO_setup.exe");
             try
             {
+                if (Directory.Exists(dir) && (new DirectoryInfo(dir).Attributes & FileAttributes.ReparsePoint) != 0) Directory.Delete(dir);   // a link: remove the link only
                 Directory.CreateDirectory(dir);
                 File.WriteAllBytes(file, exe);
                 return Run(file, "-install -silent", log);
@@ -349,7 +341,6 @@ namespace SalvaOPM
             win.Set(Mode.Balanced, false);
             if (ours && PawnIoModule.InstalledVersion() != null) UninstallPawnIo(log);
             RemoveAll(log);
-            try { File.Delete(Path.Combine(Path.GetTempPath(), "SalvaOPM-setup-result.txt")); } catch (Exception) { }   // left by setups before 2.4
             if (!quiet) MessageBox.Show(RemovedMessage, "Salva OPM");
             return 0;
         }

@@ -437,6 +437,7 @@ namespace SalvaOPM
 
         private void EndLapse(long now)
         {
+            if (Guard.Active) { StartLapse(now); return; }   // the guard's fan writes refresh the host state: wait until it ends
             PowerData p = _bios.ReadPower();   // a read does not refresh the host state
             bool gone = p != null && p.Pl1 == 0 && p.Pl2 == 0;
             if (!gone && now - _lapseStart < LapseMaxMs) { _lapseUntil = now + TickMs; return; }
@@ -546,6 +547,7 @@ namespace SalvaOPM
                 Log("thermal guard released");
                 _lvlCpu = _lvlGpu = -1;
                 SendProfile(Profile);
+                if (Lapsing) StartLapse(now);   // that profile write refreshed the old limit: give it the full time again
                 if (!FansByBios) FanTick(now, true);
             }
             WatchFans(now);

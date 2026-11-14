@@ -466,6 +466,11 @@ namespace SalvaOPM
             r.Sens.Cpu = 96;
             RunFor(r, 0, 20000);
             Check(r.Core.Guard.Active && !r.Sim.FansByBios && r.Sim.HeldCpu == 48, "the thermal guard still takes the fans during the lapse");
+            now = RunFor(r, 20000, 80000);
+            r.Sens.Cpu = 60;
+            now = RunFor(r, now, 400000);
+            Check(!r.Core.Guard.Active && !r.Core.Lapsing && r.Sim.HostPl1 == 0 && r.Sim.HostPl2 == 0 && !r.Sim.FansByBios,
+                "a guard during the lapse kept the old limit alive: the lapse starts again after it, and the 55 W limit is still dropped");
 
             r = new Rig(); r.Core.Boot(true, 0); r.Core.Select(Mode.Eco, 0);
             r.Unplug(0);
@@ -739,7 +744,7 @@ namespace SalvaOPM
                         if (sim.HostPl1 > 80 || sim.HostPl2 > 80 || (sim.HostPl1 != 0 && sim.HostPl1 < 45)) why = "PL outside 45..80";
                         else if (r.Core.InPerformance && !ac) why = "Performance on battery";
                         else if (r.St.SavedMode == Mode.Performance) why = "Performance saved";
-                        lapseSince = r.Core.Lapsing ? (lapseSince < 0 ? now : lapseSince) : -1;
+                        lapseSince = r.Core.Lapsing && !r.Core.Guard.Active ? (lapseSince < 0 ? now : lapseSince) : -1;   // the guard restarts it
                         if (lapseSince >= 0 && now - lapseSince > Engine.LapseMaxMs + Engine.TickMs) why = "lapse longer than 180 s";
                         perf04Since = sim.Profile == HpBios.ProfilePerformance && !r.Core.InPerformance ? (perf04Since < 0 ? now : perf04Since) : -1;
                         if (perf04Since >= 0 && now - perf04Since > Engine.LapseMaxMs) why = "profile 0x04 without Performance for 3 minutes";

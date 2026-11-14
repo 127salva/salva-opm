@@ -4,7 +4,7 @@ A small Windows app that replaces OMEN Gaming Hub's performance control on one l
 
 ![CI](https://github.com/127salva/salva-opm/actions/workflows/ci.yml/badge.svg)
 
-> **Hardware-specific.** It writes to the laptop's firmware. It was built for and tested on **one** laptop (OMEN 16-ap0xxx, BIOS F.13). On any other board it only monitors and writes nothing. It needs no HP software or drivers (tested with them removed); a freshly installed Windows has not been tried yet. It is a personal tool, published to read, provided as is with no warranty (see [LICENSE](LICENSE)); the firmware's own thermal protections always stay in charge.
+> **Hardware-specific.** It writes to the laptop's firmware. It was built for and tested on **one** laptop (OMEN 16-ap0xxx, BIOS F.13). On any other board the setup refuses to install; if the laptop's identity does not match at start, the app only monitors and writes nothing. It needs no HP software or drivers (tested with them removed); a freshly installed Windows has not been tried yet. It is a personal tool, published to read, provided as is with no warranty (see [LICENSE](LICENSE)); the firmware's own thermal protections always stay in charge.
 
 ## What it does
 - **Modes:** Eco, Balanced, Performance (Performance = HP's "Unleashed": 80 W CPU limits, GPU at maximum power; charger required).

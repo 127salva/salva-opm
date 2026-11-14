@@ -37,7 +37,7 @@ The simulator (`SimFirmware`) encodes behaviour measured on the laptop: concurre
 | Other BIOS versions | none: only `F.13` is validated; the app warns on any other |
 
 ## Every feature: how it is checked
-Status of 2.4.3 (2026-11-13). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` lines recorded in `docs/user-tests.md` and `docs/hardware/evidence.md`. Self-check names are quoted from `src/SelfCheck.cs`.
+Status of 2.4.4 (2026-11-14). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` lines recorded in `docs/user-tests.md` and `docs/hardware/evidence.md`. Self-check names are quoted from `src/SelfCheck.cs`.
 
 | Feature | Self-checks | On the laptop |
 |---|---|---|
@@ -47,7 +47,7 @@ Status of 2.4.3 (2026-11-13). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` l
 | Auto curve and fan movement | `CurveTests`, "rising temperature: both fans climb …", "Auto curve written at boot …" | levels 19–48 accepted (2.0); Balanced 75–76 °C while gaming on the quiet curve (H1) |
 | Custom curve (Performance only) | custom rows in `CurveTests`; "Custom in Performance …", "the choice and the custom curve survive a restart" | in daily use on 2.1–2.3; not re-tested on its own on 2.4 |
 | 85 °C rule | four rows in `CurveTests`; "85 C for a minute: fans to 4800 rpm"; endurance invariant | H1 (engaged 14:35:00, released 14:46:45) and H5 (22:44:43) |
-| Thermal guard (CPU ≥ 95 °C, ambient ≥ 62 °C, stalled fans) | `GuardTests`; "thermal guard: CPU >= 95 …", "… on battery takes the fans …", "the thermal guard still takes the fans during the lapse" | **never observed** (never provoked on purpose) |
+| Thermal guard (CPU ≥ 95 °C, ambient ≥ 62 °C, stalled fans) | `GuardTests`; "thermal guard: CPU >= 95 …", "… on battery takes the fans …", "the thermal guard still takes the fans during the lapse", "a guard during the lapse …: the lapse starts again after it …" | **never observed** (never provoked on purpose) |
 | Battery-drain rule (40 %) | `GovernorTests` battery rows | **never observed** |
 | Chassis 54 °C rule | `GovernorTests` chassis rows; "governor (chassis 54) …" | **never observed** |
 | Fans not following → firmware | "fans far below the level written for a minute …", "fan writes refused 8 times …" | **never observed** (the fans always followed) |

@@ -1,4 +1,4 @@
-# Salva OPM 2.4.3: what it does (and doesn't)
+# Salva OPM 2.4.4: what it does (and doesn't)
 
 Everything Salva OPM touches on the HP OMEN 16-ap0 with board **8E35**. Source: `src/` (plain C#, built by `build.cmd` with Windows' own compiler). The one file to run is `dist\SalvaOPM-Setup.exe`. The app works offline; the setup needs internet once, only if PawnIO is not installed yet.
 
@@ -74,7 +74,7 @@ Through Windows' own WMI channel `root\wmi hpqBIntM`. Packet = `"SECU"` + comman
 
 Every write is checked by reading back. Out-of-range values throw; nothing is clamped silently. The graphics (MUX) mode is never read or written.
 
-**Wrong laptop:** if the board isn't `8E35` on an OMEN 16-ap0, the app only monitors and writes nothing. A BIOS other than the validated `F.13` shows a warning.
+**Wrong laptop:** on a board other than `8E35` the setup refuses to install. If the app starts and the model is not an OMEN 16-ap0 with board `8E35` (or the identity cannot be read), it only monitors and writes nothing. A BIOS other than the validated `F.13` shows a warning.
 
 ## Other things on the PC it touches
 | What | Where | When |

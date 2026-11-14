@@ -2,11 +2,11 @@
 
 A Windows tray app that replaces OMEN Gaming Hub's performance control on **one laptop**: HP OMEN 16-ap0 with board **8E35** (validated BIOS F.13). It writes to the laptop's firmware. Start with `README.md`, then `docs/what-it-does.md`.
 
-## Where it stands (2.4.3, 2026-11-13)
+## Where it stands (2.4.4, 2026-11-14)
 - Feature-complete for its owner. Every check in `docs/user-tests.md` (H1–H7) passed on the laptop; H8 (a fresh Windows install) is not done yet: planned for the owner's next clean Windows install.
-- `build.cmd`: 188 self-checks, 0 failures.
+- `build.cmd`: 189 self-checks, 0 failures.
 - What is proven on hardware, what only in the simulator, what never happened: the table "Every feature: how it is checked" in `docs/testing.md`.
-- Releases: GitHub releases of `127salva/salva-opm`; v2.4.3 is the first public one (tag `v2.4.3`; its SHA-256 is in the release notes). If the tag is missing, it has not been published yet.
+- Releases: GitHub releases of `127salva/salva-opm`; the first public one was v2.4.3; each release has a tag `vX.Y.Z` and its SHA-256 in the release notes. If the tag of the version in `src/Setup.cs` is missing, that version has not been published yet.
 - Open points, none blocking:
   - never observed on the laptop: thermal guard, battery-drain rule, chassis 54 °C rule, fail safe, behaviour after a BIOS update (the feature table in `docs/testing.md` is the full list);
   - private memory of the running app grows ~0.3 MB/h while idle (accepted: it starts fresh at every Windows start);
