@@ -28,7 +28,7 @@ namespace SalvaOPM
     public static class Setup
     {
         public const string TaskName = "SalvaOPM";
-        public const string Version = "2.4.4";
+        public const string Version = "2.4.5";
         public const string PawnIoUrl = "https://github.com/namazso/PawnIO.Setup/releases/download/2.2.0/PawnIO_setup.exe";
         public const string PawnIoSha256 = "1F519A22E47187F70A1379A48CA604981C4FCF694F4E65B734AAA74A9FBA3032";
         private const string UninstallKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\SalvaOPM";
@@ -201,7 +201,6 @@ namespace SalvaOPM
             string file = Path.Combine(dir, "PawnIO_setup.exe");
             try
             {
-                if (Directory.Exists(dir) && (new DirectoryInfo(dir).Attributes & FileAttributes.ReparsePoint) != 0) Directory.Delete(dir);   // a link: remove the link only
                 Directory.CreateDirectory(dir);
                 File.WriteAllBytes(file, exe);
                 return Run(file, "-install -silent", log);
@@ -342,6 +341,7 @@ namespace SalvaOPM
             if (ours && PawnIoModule.InstalledVersion() != null) UninstallPawnIo(log);
             RemoveAll(log);
             if (!quiet) MessageBox.Show(RemovedMessage, "Salva OPM");
+            DeleteInstallDirLater();   // last: the box above keeps this exe open (Settings > Apps runs it from the install folder)
             return 0;
         }
 
@@ -380,13 +380,17 @@ namespace SalvaOPM
             try { if (File.Exists(Shortcut)) File.Delete(Shortcut); } catch (Exception) { }
             try { RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).DeleteSubKeyTree(UninstallKey, false); } catch (Exception) { }
             try { Directory.Delete(Settings.DefaultDirectory(), true); } catch (Exception) { }
+        }
+
+        private static void DeleteInstallDirLater()
+        {
             // a running exe cannot delete its own folder: a hidden cmd does it a few seconds after this process ends
             // full paths: an elevated process must never pick up a cmd.exe or ping.exe planted next to the setup
             string sys = Environment.SystemDirectory;
             // cmd /c drops the first and the last quote of a line that starts with one, so the whole line gets one more
             // pair (without it the folder stayed: H4, 2026-11-13)
             ProcessStartInfo psi = new ProcessStartInfo(Path.Combine(sys, "cmd.exe"),
-                "/c \"\"" + Path.Combine(sys, "PING.EXE") + "\" -n 4 127.0.0.1 >nul & rmdir /s /q \"" + InstallDir + "\"\"");
+                "/c \"\"" + Path.Combine(sys, "PING.EXE") + "\" -n 6 127.0.0.1 >nul & rmdir /s /q \"" + InstallDir + "\"\"");
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;
             psi.WorkingDirectory = sys;

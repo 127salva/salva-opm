@@ -205,8 +205,11 @@ namespace SalvaOPM
             Item(o, wmi == "Running", "WMI service (Winmgmt) running" + (wmi == null ? " - WMI not reachable" : ""));
             string sch = Query(@"root\cimv2", "SELECT State FROM Win32_Service WHERE Name='Schedule'", "State");
             Item(o, sch == "Running", "Task Scheduler service (Schedule) running");
+            // the same rule the app uses at start: the setup must not remove OMEN Gaming Hub where the app would only monitor
+            string model = Query(@"root\cimv2", "SELECT Model FROM Win32_ComputerSystem", "Model");
             string board = Query(@"root\cimv2", "SELECT Product FROM Win32_BaseBoard", "Product");
-            Item(o, board == "8E35", "board 8E35 (found: " + (board ?? "unknown") + ")");
+            Item(o, model != null && board != null && Identity.WritesAllowed(model.Trim(), board.Trim()),
+                "OMEN 16-ap0 with board 8E35 (found: " + (model == null ? "unknown" : model.Trim()) + ", " + (board == null ? "unknown" : board.Trim()) + ")");
             string mapper = Query(@"root\cimv2", "SELECT Status FROM Win32_PnPEntity WHERE DeviceID LIKE 'ACPI\\\\PNP0C14%'", "Status");
             Item(o, mapper == "OK", "Windows ACPI-WMI mapper device (ACPI\\PNP0C14)");
             bool cls = false;

@@ -1,4 +1,4 @@
-# Salva OPM 2.4.4: what it does (and doesn't)
+# Salva OPM 2.4.5: what it does (and doesn't)
 
 Everything Salva OPM touches on the HP OMEN 16-ap0 with board **8E35**. Source: `src/` (plain C#, built by `build.cmd` with Windows' own compiler). The one file to run is `dist\SalvaOPM-Setup.exe`. The app works offline; the setup needs internet once, only if PawnIO is not installed yet.
 
@@ -74,7 +74,7 @@ Through Windows' own WMI channel `root\wmi hpqBIntM`. Packet = `"SECU"` + comman
 
 Every write is checked by reading back. Out-of-range values throw; nothing is clamped silently. The graphics (MUX) mode is never read or written.
 
-**Wrong laptop:** on a board other than `8E35` the setup refuses to install. If the app starts and the model is not an OMEN 16-ap0 with board `8E35` (or the identity cannot be read), it only monitors and writes nothing. A BIOS other than the validated `F.13` shows a warning.
+**Wrong laptop:** anything but an OMEN 16-ap0 with board `8E35` and the setup refuses to install. If the app starts and the model or board does not match (or the identity cannot be read), it only monitors and writes nothing. A BIOS other than the validated `F.13` shows a warning.
 
 ## Other things on the PC it touches
 | What | Where | When |
@@ -102,7 +102,7 @@ No services of its own, no telemetry, no auto-update. The only network use is th
 ## Removing it
 - Open `SalvaOPM-Setup.exe` again → **Uninstall**, or Settings > Apps > Salva OPM.
 - Uninstall puts the firmware back (on the validated laptop only): profile `0x30` with the firmware's own fan control, concurrent TDP baseline, the GPU record read at first start (`00 01 00 57`).
-- It re-enables `HPOmenCap` as it was before; HP's own software may then reinstall OMEN Gaming Hub, as on a stock laptop.
+- It sets `HPOmenCap` to Automatic and starts it again; HP's own software may then reinstall OMEN Gaming Hub, as on a stock laptop.
 - It sets the Windows power mode back to Balanced (charger and battery).
 - It removes the program, task, shortcut, Apps entry and settings.
 - OMEN Gaming Hub is not restored: install it from the Microsoft Store if you want it back. Keyboard RGB keeps its last setting meanwhile.
