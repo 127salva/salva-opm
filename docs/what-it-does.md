@@ -66,13 +66,13 @@ Through Windows' own WMI channel `root\wmi hpqBIntM`. Packet = `"SECU"` + comman
 | 0x20008 | 33 / 34 | read / write | GPU record (cTGP, PPAB, dState 0/1; target 75..87) | GPU presets, chassis rule |
 | 0x20008 | 35 | read | sensor index | chassis (IR) for the 54 °C rule, ambient for the guard |
 | 0x20008 | 41 | write | `PL, PL, FF, FF` (45..80 W) or `FF, FF, FF, TDP` (20..82 W) | Performance power |
-| 0x20008 | 42 | read | none | read-back of every power write |
+| 0x20008 | 42 | read | none | read-back of power writes; checks that an old limit has lapsed |
 | 0x20008 | 45 | read | 4 zero bytes | fan speeds |
 | 0x20008 | 46 | write | 128 B: `cpu, gpu, 0…` (19..48) | fan levels |
 | 0x20008 | 53 | read | `0, 4, 0, 0` | BIOS thermal-throttling flag |
 | 1 | 15 | read | 4 zero bytes | charger status |
 
-Power and GPU writes are checked by reading them back, and fan writes by reading the fan speeds (from 2500 rpm up, over a minute); the firmware has no known read for the thermal profile. Out-of-range values make `HpBios` throw instead of being clamped; the fan curve keeps its own targets inside 19..48 before they get there. The graphics (MUX) mode is never read or written.
+Power and GPU writes made while the app runs are checked by reading them back, and fan writes by reading the fan speeds (from 2500 rpm up, over a minute). The firmware has no known read for the thermal profile, and the writes on the way out (leaving Performance, fail safe, start-up TDP repair, uninstall) are not read back. Out-of-range values make `HpBios` throw instead of being clamped; the fan curve keeps its own targets inside 19..48 before they get there. The graphics (MUX) mode is never read or written.
 
 **Wrong laptop:** anything but an OMEN 16-ap0 with board `8E35` and the setup refuses to install. If the app starts and the model or board does not match (or the identity cannot be read), it only monitors and writes nothing. A BIOS other than the validated `F.13` shows a warning.
 
