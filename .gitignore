@@ -1,0 +1,17 @@
+# build output
+/out/
+/dist/
+
+# PawnIO's installer is downloaded by the setup at install time, never committed or shipped
+/third_party/PawnIO_setup.exe
+
+# a local copy of Ohman (https://github.com/P4R1H/Ohman, commit in docs/hardware/evidence.md section 11), to read only
+/ref/
+
+# editors and Windows
+.vs/
+.vscode/
+*.user
+*.suo
+Thumbs.db
+desktop.ini

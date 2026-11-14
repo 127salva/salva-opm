@@ -1,0 +1,78 @@
+# Changelog
+
+Versions follow [semantic versioning](https://semver.org). Dates are when the build was made.
+
+## 2.4.3 - 2026-11-13
+### Added
+- The version is shown at the bottom right of the window, opposite the temperatures and fan speeds.
+### Changed
+- Settings > Apps shows the publisher as "127salva", as in the copyright.
+### Fixed
+- Exiting from the tray in Performance left the GPU record at Max until the app started again (it does not lapse by itself). Exit now puts it back to Boost, like the fail safe already did.
+
+## 2.4.2 - 2026-11-13
+### Fixed
+- Uninstall left `C:\Program Files\Salva OPM\SalvaOPM.exe` behind: the full-path `cmd /c` line added in 2.4.0 lost its quotes (cmd strips the first and last quote). Found in the uninstall test (H4).
+- Uninstall also deletes the result file older setups left in the user's TEMP.
+
+## 2.4.1 - 2026-11-13
+Fixes from the repetition test on the laptop (H3).
+### Fixed
+- Changing between Eco and Balanced in the two minutes after leaving Performance re-sent the profile, which kept the 55 W limit alive ("host limits did not lapse"); the app then held it for good. Such a change now applies the Windows power mode at once and reaches the firmware when the old limit is gone.
+- Entering Performance from Eco: the firmware sets concurrent TDP to 45 about a second after the GPU record changes. TDP is now checked again on the next two 5 s ticks, instead of waiting up to 45 s for the heartbeat.
+- Modern Standby gives the app no resume event: a gap of more than 30 s between ticks is now treated as a wake-up and everything is applied again.
+
+## 2.4.0 - 2026-11-13
+Fixes from the pre-release audit.
+### Fixed
+- A power limit left by a session that ended moments before (every update, a crash) was held for good by the fan keep-alive. It is now left to lapse at start, as after leaving Performance.
+- Concurrent TDP is checked again after each GPU write in Performance and written again if the firmware changed it (seen once: 82 → 45).
+- After waking while the thermal guard is on, the fans go to maximum at once instead of up to 10 s later.
+- WMI queries (BIOS interface lookup, laptop identity) can no longer hang the window: they give up after 10 s.
+### Security
+- PawnIO is no longer shipped inside the setup: it is downloaded once from its official release, SHA-256 checked, and run from the administrators-only folder (no swap possible after the check). Uninstall removes it with PawnIO's own uninstaller.
+- The elevated setup loads DLLs from System32 only, starts `cmd.exe` and `ping.exe` by full path, and no longer writes into the user's TEMP.
+- The data folder is re-created when it was planted before install (a link, or not owned by administrators).
+- `--read` and `--dry-run` also refuse type 16 (it arms the firmware's host fan control).
+### Added
+- Fail safe: an unexpected error hands fans and power to the firmware, stops all writes until restart and shows a red tray icon.
+- One copy per PC (machine-wide lock), even with several Windows users signed in.
+- Uninstall restores the firmware only on the validated laptop.
+- Self-check: 14 simulated days with random load, unplugging, sleep, mode changes and failing BIOS calls.
+### Changed
+- SPDX license and copyright headers in every source file; Ohman-derived files say so.
+- `--selftest` keeps its scratch files in TEMP, so it also runs from Program Files.
+
+## 2.3.0 - 2026-11-13
+### Changed
+- Auto fan curve replaced by a quiet one (1900 rpm up to 60 °C, 4800 rpm at 90 °C) in all modes.
+- After leaving Performance the app sends nothing to the firmware for about two minutes, so the 55 W limit lapses instead of being held (the laptop stayed hot with loud fans before).
+- Uninstall also resets the Windows power mode to Balanced and removes PawnIO when this setup installed it.
+### Added
+- 85 °C rule: CPU at 85 °C or more for a minute pushes the fans to maximum until it is under 80 °C.
+- One log line of readings (temperatures, fans, power limits) at every mode change.
+- Periodic cleanup so the handle count stays flat.
+
+## 2.2.0 - 2026-11-12
+### Changed
+- Fan switch: Auto only in Eco and Balanced; Auto | Custom in Performance. Custom curve is Performance-only.
+- Tray icon colour shows the mode; tooltip shows temperatures and fan speeds.
+### Added
+- Custom curve lower bound from OGH: from 75 °C up never below 2900 rpm.
+- A failed apply (BIOS not answering, e.g. after sleep) is retried at the next heartbeat.
+### Fixed
+- Routine fan steps no longer flood the log. Fan watch triggers when either fan lags.
+
+## 2.1.0 - 2026-11-12
+### Changed
+- One-page window. Graphics switch, settings page, floor and ramp controls removed.
+- Custom curve: 7 points at 60–90 °C, each fan following its own chip.
+- Install removes OMEN Gaming Hub completely; uninstall is done from the setup.
+### Added
+- Monitoring-only mode on any other laptop; BIOS version warning; firmware fans when the CPU temperature is unknown; settings folder writable by administrators only.
+
+## 2.0.0 - 2026-11-12
+- Rebuilt on Ohman's logic as "Salva OPM": software fan curve, GPU presets, thermal guard, PawnIO CPU temperature, OGH take-over, single-file setup.
+
+## 1.0.0 - 2026-11-11
+- "OmenModes": three-button tray app (Eco, Balanced, Unleashed) with the battery-drain and chassis-temperature rules.

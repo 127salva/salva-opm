@@ -1,0 +1,7 @@
+version: 2
+updates:
+  # the project has no package dependencies; only the workflow actions need updates
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
