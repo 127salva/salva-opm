@@ -16,7 +16,7 @@ The self-checks run against a simulator. These are the checks only the real lapt
 | OGH removal | package, tasks and folders gone; `HPOmenCap` disabled |
 | Stale TDP after a crash | "start-up: concurrent TDP restored to 30" |
 
-## Results so far (2026-11-13)
+## Results so far (2026-11-13 and 2026-11-14)
 | Check | Version | Result |
 |---|---|---|
 | H2 update in Performance | 2.4.0 | **pass** 09:57: start-up lapse, `host limits lapsed … PL 0/0` 125 s after leaving Performance |
@@ -40,17 +40,17 @@ Install first: run `SalvaOPM-Setup.exe` → **Update**. After each check, send `
 
 | # | Check | How | Pass when |
 |---|---|---|---|
-| H1a | **Leaving Performance under load** | FiveM (or the CPU load below) in Performance ≥ 10 min → Balanced → keep playing 5 min | log: `host limits lapsed … PL 0/0` within 3 min of the switch; temperatures fall |
+| H1a | Leaving Performance under load | FiveM (or the CPU load below) in Performance ≥ 10 min → Balanced → keep playing 5 min | log: `host limits lapsed … PL 0/0` within 3 min of the switch; temperatures fall |
 | H1b | 85 °C rule | load until the CPU sits at 85 °C for over a minute | log: `CPU above 85 C for a minute: fans to maximum`, fans 4800 rpm, then back to the curve under 80 °C |
 | H1c | Quick return to Performance | Performance → Balanced → Performance within 15 s | stays Performance; no `switched to Balanced`; a `written again` line is fine |
-| H2 | **Update while in Performance** | Performance → run the setup → **Update** | log after the restart: `start-up: host power limit … letting it lapse`, then `host limits lapsed … PL 0/0` within 3 min |
+| H2 | Update while in Performance | Performance → run the setup → **Update** | log after the restart: `start-up: host power limit … letting it lapse`, then `host limits lapsed … PL 0/0` within 3 min |
 | H3 | Repetition (~30 min) | 20 × sleep/wake (some in Performance), 20 × unplug/replug, 30 quick mode changes | no lasting amber line; every mode follows the power rules; no `drift detected` |
 | H4 | Uninstall and install (~15 min) | setup → **Uninstall**; check Settings > Apps (Salva OPM and PawnIO gone), Task Scheduler (`SalvaOPM` gone), `C:\Program Files\Salva OPM` and `C:\ProgramData\SalvaOPM` gone, Windows power mode Balanced → setup → **Install** (downloads PawnIO) → setup → **Update** | everything removed, then back and running; CPU temperature shown after the restart PawnIO may ask for |
 | H5 | Long run | 8 hours in any mode with the window closed, sampling memory and handles every 5 min (the 3 days of normal use first planned were dropped by the owner) | no warnings; the memory sample stays flat |
 | H6 | Install offline with PawnIO present | Wi-Fi off → setup → **Update** | installs without asking for the network |
 | H7 | Without HP's drivers | Device Manager → System devices → **Uninstall device** on `HP Omen Driver` and `HP Application Driver` (do not tick removing the driver) → setup → **Update** (no restart) → Eco, Balanced, Performance 1 min, Balanced, OMEN key twice → restart (the drivers come back) | modes applied and verified, CPU temperature read, OMEN key works |
-| H8 | **Fresh Windows (not done yet)** | after a clean Windows install, before installing anything from HP: run the setup → **Install** with internet, then `--check` and H1c | installs (PawnIO downloaded), modes applied and verified. Only Windows' own .NET Framework 4.8 is needed (part of Windows 10 1903+ and 11) |
-| — | OMEN key | press twice | window opens, then hides |
+| H8 | Fresh Windows (**not done yet**) | after a clean Windows install, before installing anything from HP: run the setup → **Install** with internet, then `--check` and H1c | installs (PawnIO downloaded), modes applied and verified. Only Windows' own .NET Framework 4.8 is needed (part of Windows 10 1903+ and 11) |
+|  | OMEN key | press twice | window opens, then hides |
 
 **CPU load without downloading anything** (normal PowerShell). Start:
 ```powershell

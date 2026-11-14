@@ -11,7 +11,7 @@ labels: bug
 **Steps**
 
 **Version and machine**
-- Salva OPM version (setup window, top right):
+- Salva OPM version (bottom right of the window, or top right of the setup):
 - Model, board, BIOS (first `identity:` line in the log):
 
 **Log**

@@ -45,7 +45,7 @@ HpBios ──► IFirmware ──► WmiFirmware (real)  │  SimFirmware (tests
 ISensors ─► SystemSensors (real)             │  SimSensors
 IPowerSource / IPowerModeSetter ─► real      │  simulated
 ```
-The Engine never touches WMI, drivers or Windows directly; everything goes through an interface with a simulated twin. That is what lets the whole engine run in the self-checks.
+The Engine never touches WMI, drivers or Windows directly; everything goes through an interface with a simulated twin, so the whole engine runs in the self-checks.
 
 ## Timing (Engine.Tick, called every 5 s on the UI thread)
 | Every | Work |
@@ -62,7 +62,7 @@ The Engine never touches WMI, drivers or Windows directly; everything goes throu
 - **Lapse after Performance.** Power limits cannot be cleared by a write, only by letting them lapse. After Performance the app stays silent for 125 s with the firmware driving the fans.
 - **Lapse at start-up too.** A host power limit found at start (the previous session ended moments ago: update, crash) is left to lapse the same way.
 - **Fail safe.** An unexpected error hands fans and power to the firmware and stops every write until the app restarts.
-- **Fail closed on identity.** Not board `8E35` on a 16-ap0 → monitoring only. The uninstall's firmware restore checks the same.
+- **Fail closed on identity.** On anything but a 16-ap0 with board `8E35` the setup refuses to install, and the app only monitors. The uninstall's firmware restore checks the same.
 - **One copy per PC.** A machine-wide lock (`Global\SalvaOPM`) keeps a second Windows session from running a second copy.
 - **Saved mode is never Performance.** A restart always comes back in Eco or Balanced.
 - **The GPU record is put back by the app.** Unlike power limits it does not lapse: exit and fail safe write Boost, the next start writes the preset of its mode; uninstall writes the record read at first start.

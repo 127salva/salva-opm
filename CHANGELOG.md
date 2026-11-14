@@ -27,7 +27,7 @@ Fixes from a whole-repository review.
 - The CPU temperature is tried again once a minute when the PawnIO driver was not ready at logon (before: firmware fans for the whole session).
 - An idle GPU is read at once when it wakes up or the CPU heats up quickly, instead of up to 30 s later.
 ### Security
-- The data folder is created with its permissions in one step and checked afterwards; a folder or link planted in between is refused, never given new permissions.
+- The data folder is created with its permissions in one step and checked afterwards; a folder or link planted in between is refused and gets no new permissions.
 ### Removed
 - Clean-up of version 1 ("OmenModes", never published) and of a result file left in TEMP by setups before 2.4.
 ### Docs

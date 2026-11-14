@@ -1,17 +1,17 @@
 # Salva OPM
 
-A small Windows app that replaces OMEN Gaming Hub's performance control on one laptop: the **HP OMEN 16-ap0 with board 8E35**. Three modes, a fan curve, and nothing else.
+A small Windows app that replaces OMEN Gaming Hub's performance control on one laptop, the HP OMEN 16-ap0 with board 8E35. It switches between three modes and runs a fan curve.
 
 ![CI](https://github.com/127salva/salva-opm/actions/workflows/ci.yml/badge.svg)
 
-> **Hardware-specific.** It writes to the laptop's firmware. It was built for and tested on **one** laptop (OMEN 16-ap0xxx, BIOS F.13). On any other laptop the setup refuses to install; if the identity cannot be read when the app starts, it only monitors and writes nothing. It needs no HP software or drivers (tested with them removed); a freshly installed Windows has not been tried yet. It is a personal tool, published to read, provided as is with no warranty (see [LICENSE](LICENSE)); the firmware's own thermal protections always stay in charge.
+> **Hardware-specific.** It writes to the laptop's firmware. It was built for and tested on only one laptop (OMEN 16-ap0xxx, BIOS F.13). On any other laptop the setup refuses to install; if the identity cannot be read when the app starts, it only monitors and writes nothing. It needs no HP software or drivers (tested with them removed); a freshly installed Windows has not been tried yet. It is a personal tool, published to read, provided as is with no warranty (see [LICENSE](LICENSE)); the firmware's own thermal protections always stay in charge.
 
 ## What it does
-- **Modes:** Eco, Balanced, Performance (Performance = HP's "Unleashed": 80 W CPU limits, GPU at maximum power; charger required).
-- **Fans:** a quiet automatic curve in every mode; a custom 7-point curve in Performance.
-- **Safety:** thermal guard, an 85 °C rule, battery-drain and chassis-temperature rules, and hand-back to the firmware whenever something is off.
-- **Power rules:** unplug → Eco, replug → Balanced, Performance never survives a restart.
-- **Single file:** `SalvaOPM-Setup.exe` installs, updates and uninstalls. The app never uses the network; the setup does once, to download PawnIO when it is missing.
+- Three modes: Eco, Balanced and Performance. Performance is HP's "Unleashed" (80 W CPU limits, GPU at maximum power) and needs the charger.
+- A quiet automatic fan curve in every mode, and a custom 7-point curve in Performance.
+- A thermal guard, an 85 °C rule, and battery-drain and chassis-temperature rules. When something is off, the firmware gets control back.
+- Unplugging switches to Eco and plugging back in switches to Balanced. Performance never survives a restart.
+- One file, `SalvaOPM-Setup.exe`, installs, updates and uninstalls. The app never uses the network; the setup uses it once, to download PawnIO when it is missing.
 
 The full account of every firmware call and every change to the PC is in [docs/what-it-does.md](docs/what-it-does.md).
 
@@ -41,7 +41,7 @@ build.cmd
 ```bat
 dist\SalvaOPM-Setup.exe --demo
 ```
-The whole app against a simulated firmware: no administrator rights, no hardware, no Windows setting changed.
+This runs the whole app against a simulated firmware. It needs no administrator rights and changes no Windows setting.
 
 Other switches: `--selftest`, `--check` (prerequisites), `--read` (every read-only value; administrator), `--dry-run [minutes]` (live readings and what the app would do; administrator).
 

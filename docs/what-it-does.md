@@ -1,6 +1,6 @@
 # Salva OPM 2.4.7: what it does (and doesn't)
 
-Everything Salva OPM touches on the HP OMEN 16-ap0 with board **8E35**. Source: `src/` (plain C#, built by `build.cmd` with Windows' own compiler). The one file to run is `dist\SalvaOPM-Setup.exe`. The app works offline; the setup needs internet once, only if PawnIO is not installed yet.
+Everything Salva OPM touches on the HP OMEN 16-ap0 with board 8E35. Source: `src/` (plain C#, built by `build.cmd` with Windows' own compiler). The one file to run is `dist\SalvaOPM-Setup.exe`. The app works offline; the setup needs internet once, only if PawnIO is not installed yet.
 
 Its logic follows Ohman (github.com/P4R1H/Ohman, GPL-3.0), except the Auto fan curve, which is the owner's quiet one. Performance keeps the values verified on this laptop (`docs/hardware/evidence.md`).
 
@@ -18,7 +18,7 @@ Closing the window keeps the app in the tray. The tray diamond shows the mode (g
 | | Eco | Balanced | Performance (needs the charger) |
 |---|---|---|---|
 | BIOS thermal profile | `0x30` | `0x30` | `0x04` (OGH's Unleashed) |
-| CPU power | firmware default | firmware default | PL1/PL2 **80 W**, concurrent TDP **82 W** |
+| CPU power | firmware default | firmware default | PL1/PL2 80 W, concurrent TDP 82 W |
 | GPU preset [cTGP, PPAB, dState, temp target] | Base `0,0,1,75` | Boost `0,1,1,87` | Max `1,1,1,87` |
 | Fans (charger in) | Auto | Auto | Auto or Custom |
 | Windows power mode | Best power efficiency | Balanced | Best performance |
@@ -88,12 +88,12 @@ Every write is checked by reading back. Out-of-range values throw; nothing is cl
 | OGH's background, if it ever returns | ended | app start and every 45 s |
 | Windows power mode | the AC/DC power-mode setting | on mode changes |
 
-No services of its own, no telemetry, no auto-update. The only network use is the setup's one PawnIO download.
+The app installs no service of its own, sends no telemetry and never updates itself. Its only network use is the setup's one PawnIO download.
 
 ## What each outside piece is, and how it was checked
 | Piece | Source | Checked |
 |---|---|---|
-| Fan, profile and power calls | Linux kernel `hp-wmi.c` lists board **8E35** and drives fans with the same call (`0x2E`), with the same `0x10` trigger and 120 s timeout; Ohman lists 8E35 as owner-verified | run on this laptop (`docs/hardware/evidence.md` sections 8 and 12) |
+| Fan, profile and power calls | Linux kernel `hp-wmi.c` lists board 8E35 and drives fans with the same call (`0x2E`), with the same `0x10` trigger and 120 s timeout; Ohman lists 8E35 as owner-verified | run on this laptop (`docs/hardware/evidence.md` sections 8 and 12) |
 | Windows power mode | `PowerSetUserConfiguredACPowerMode` / `DCPowerMode`, documented by Microsoft; the three GUIDs are the documented ones | Windows setting follows the mode |
 | PawnIO | signed by "Microsoft Windows Hardware Compatibility Publisher"; only the read call `ioctl_read_smn` is used | running on this PC with Memory Integrity (HVCI) on |
 | GPU temperature | NVIDIA's own `nvml.dll` from `System32`; not polled while the GPU sleeps | 20 open/read/close cycles: no handle growth |
