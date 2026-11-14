@@ -9,7 +9,7 @@ Versions follow [semantic versioning](https://semver.org). Dates are when the bu
 ## 2.4.5 - 2026-11-14
 Fixes from a second whole-repository review.
 ### Fixed
-- Uninstall from Settings > Apps could leave `C:Program FilesSalva OPMSalvaOPM.exe` behind: the folder was deleted about 3 s after the last step, while the "removed" message (shown by that same exe) was still open. The folder is now deleted after the message is closed, with a 5 s margin.
+- Uninstall from Settings > Apps could leave `C:\Program Files\Salva OPM\SalvaOPM.exe` behind: the folder was deleted about 3 s after the last step, while the "removed" message (shown by that same exe) was still open. The folder is now deleted after the message is closed, with a 5 s margin.
 - The setup checked only the board before installing; the app also needs the model. Another HP model with board 8E35 could install, lose OMEN Gaming Hub and get an app that only monitors. The setup now uses the same rule as the app.
 ### Removed
 - A link check in the PawnIO step that could never trigger (the folder above it is administrators-only).
