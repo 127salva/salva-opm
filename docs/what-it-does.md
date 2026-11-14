@@ -88,7 +88,7 @@ Every write is checked by reading back. Out-of-range values throw; nothing is cl
 | OGH's background, if it ever returns | ended | app start and every 45 s |
 | Windows power mode | the AC/DC power-mode setting | on mode changes |
 
-The app installs no service of its own, sends no telemetry and never updates itself. Its only network use is the setup's one PawnIO download.
+Salva OPM has no service of its own, no telemetry and no auto-update. The app never uses the network; the setup downloads PawnIO once, only when it is missing.
 
 ## What each outside piece is, and how it was checked
 | Piece | Source | Checked |

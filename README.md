@@ -1,6 +1,6 @@
 # Salva OPM
 
-A small Windows app that replaces OMEN Gaming Hub's performance control on one laptop, the HP OMEN 16-ap0 with board 8E35. It switches between three modes and runs a fan curve.
+A small Windows app that replaces OMEN Gaming Hub's performance control on one laptop, the HP OMEN 16-ap0 with board 8E35. It switches between three modes and runs a fan curve. It does not control keyboard lighting, the graphics switch or other OMEN Gaming Hub features.
 
 ![CI](https://github.com/127salva/salva-opm/actions/workflows/ci.yml/badge.svg)
 
