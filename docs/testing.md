@@ -57,7 +57,7 @@ Status of 2.4.7 (2026-11-14). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` l
 | Wake from Modern Standby (no resume event) | none (timer in `App`) | H3b: `woke from standby (106 s)`, Performance re-applied |
 | Fail safe after an unexpected error | "fail safe: 10 min and every later event without one write …" | **never observed** (no unexpected error so far) |
 | One copy per PC (`Global\SalvaOPM`) | none | code review only; not tried with two Windows users signed in |
-| Other laptop → setup refuses, app only monitors | `IdentityTests`; three "monitoring only" rows | cannot be tried here (one laptop) |
+| Other laptop → setup refuses, app only monitors | `IdentityTests`; four "monitoring only" rows | cannot be tried here (one laptop) |
 | Allow-list, value ranges, read-only mode | `FirmwareTests` (all types 0–255, sizes, ranges, type 16 refused in `--read`) | every write in the logs inside the ranges; no refusal |
 | Exit, crash, shutdown hand back to the firmware | "crash: …", "exit: fans parked …", "exit in Performance: …" (power, profile, fans and GPU record) | shutdown: fans parked and handed back each time (2.0–2.2) |
 | Install, update, uninstall, restore | none | H4 (everything removed and restored, factory GPU record read back), H6, H2, 2.4.3 update |

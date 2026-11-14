@@ -52,14 +52,14 @@ The Engine never touches WMI, drivers or Windows directly; everything goes throu
 |---|---|
 | 5 s | read temperatures; one fan-curve step; governor step in Performance |
 | 10 s | thermal guard: read fan speeds and ambient sensor; fan watch |
-| 45 s | heartbeat: re-send profile (and Performance power); end OGH's background if it returned; retry a failed apply |
+| 45 s (not during the wait after Performance) | heartbeat: re-send profile (and Performance power); end OGH's background if it returned; retry a failed apply |
 
 ## Key design decisions
 - **Allow-list at the transport.** `FirmwareRules.IsAllowed` names every (command, type, input size, output size) the app may send. Both transports enforce it.
-- **Read-back, not return codes.** The firmware answers `0` to writes it ignores (measured). Every write that matters is verified by a read.
+- **Read-back, not return codes.** The firmware answers `0` to writes it ignores (measured). Power, GPU and fan writes are verified by a read; the firmware has no read for the thermal profile.
 - **The firmware is the fallback.** The firmware forgets host state about two minutes after the last refresh. So a crash, a hang or an exit returns the laptop to firmware behaviour by itself.
 - **Type 16 only before a fan write.** That query arms the firmware's "host controls the fans" state; sending it otherwise can hold the fans.
-- **Lapse after Performance.** Power limits cannot be cleared by a write, only by letting them lapse. After Performance the app stays silent for 125 s with the firmware driving the fans.
+- **Lapse after Performance.** Power limits cannot be cleared by a write, only by letting them lapse. After Performance the app stays silent with the firmware driving the fans: at least 125 s, until PL reads 0/0 (at most 180 s); if the thermal guard has to act in that time, the wait starts again when it releases.
 - **Lapse at start-up too.** A host power limit found at start (the previous session ended moments ago: update, crash) is left to lapse the same way.
 - **Fail safe.** An unexpected error hands fans and power to the firmware and stops every write until the app restarts.
 - **Fail closed on identity.** On anything but a 16-ap0 with board `8E35` the setup refuses to install, and the app only monitors. The uninstall's firmware restore is skipped only on a laptop positively identified as another model; when the identity cannot be read it still restores, because the GPU record does not lapse by itself.

@@ -2,7 +2,7 @@
 
 ## Ground rules
 1. **No unverified firmware writes.** A new BIOS call, value or range needs evidence: where it is documented or how it was measured on the board. Record it in `docs/hardware/evidence.md`. The full list of places a new call touches is in `docs/development.md`, "Where things go".
-2. **Every write is range-checked and read back.** Out-of-range values throw; nothing is clamped silently. A `0` return code alone proves nothing.
+2. **Every write is range-checked and checked by a read.** `HpBios` throws on out-of-range values instead of clamping them (the fan curve keeps its own targets inside 19..48), and power, GPU and fan writes are read back; the thermal profile has no read. A `0` return code alone proves nothing.
 3. **Fail towards the firmware.** When a reading is missing or a write fails, the firmware gets the fans back.
 4. **Keep it small.** No new dependency, service, network call or setting without a clear need.
 

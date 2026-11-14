@@ -24,13 +24,13 @@ Closing the window keeps the app in the tray. The tray diamond shows the mode (g
 | Windows power mode | Best power efficiency | Balanced | Best performance |
 
 **Power rules:**
-- Unplug (or a charger below the laptop's requirement) → Eco (auto), firmware drives the fans.
+- Unplug → Eco (auto), firmware drives the fans. A charger below the laptop's requirement also gives Eco (auto), but the app keeps the fans.
 - Plug back in → Balanced. A manually chosen Eco stays Eco.
 - Shutting down in Performance → the next start is Balanced.
 - After sleep everything is applied again (this laptop uses Modern Standby, which sends no wake-up event: the app notices the gap in its own timer).
 
 **Safety in Performance (OGH's own rules):**
-- **Max Battery Drain 40 %:** draining below 60 % while on the charger lowers PL1/PL2 1 W per 5 s, down to 45 W.
+- **Max Battery Drain 40 %:** draining below 60 % while on the charger, with the GPU busy (load over 30 %, or unknown), lowers PL1/PL2 1 W per 5 s, down to 45 W.
 - **Chassis 54 °C:** GPU target drops to 75 with PPAB off and PL1/PL2 drop 5 W per 30 s; below 49 °C, Max comes back.
 
 ## Fans
@@ -50,7 +50,7 @@ Closing the window keeps the app in the tray. The tray diamond shows the mode (g
   - for about two minutes after leaving Performance (so the 55 W limit written on the way out lapses instead of being held), and likewise at start when a limit from the previous session is still set (e.g. right after an update). Choosing Eco or Balanced in that time changes the Windows power mode at once; the firmware gets it when the old limit is gone, because any firmware write would keep the limit alive;
   - after an unexpected error (fail safe: nothing more is written until the app restarts; red tray icon);
   - the CPU temperature can't be read (PawnIO missing or failing);
-  - the fans don't follow what is written (refused 8 times, or far below the level asked for a minute);
+  - the fans don't follow what is written (refused 8 times, far below the level asked for a minute, or still stalled 30 s after the thermal guard set them to maximum);
   - the app exits, crashes (within about 2 minutes) or is uninstalled.
 - **Thermal guard:** CPU ≥ 95 °C, ambient ≥ 62 °C, or a warm CPU with stalled fans → fans to maximum. Released after a minute below 85 / 54 °C. In every curve, Auto or Custom, and also on battery and during the wait after Performance.
 
@@ -62,7 +62,7 @@ Through Windows' own WMI channel `root\wmi hpqBIntM`. Packet = `"SECU"` + comman
 | Command | Type | Dir | Data | Used for |
 |---|---|---|---|---|
 | 0x20008 | 16 | read | 4 zero bytes | only right before a fan-level write: arms the firmware's hold on the levels |
-| 0x20008 | 26 | write | `FF, 0x30 or 0x04, fans-by-BIOS 0/1, 00` | thermal profile; re-sent every 45 s |
+| 0x20008 | 26 | write | `FF, 0x30 or 0x04, fans-by-BIOS 0/1, 00` | thermal profile; re-sent every 45 s, except during the wait after Performance |
 | 0x20008 | 33 / 34 | read / write | GPU record (cTGP, PPAB, dState 0/1; target 75..87) | GPU presets, chassis rule |
 | 0x20008 | 35 | read | sensor index | chassis (IR) for the 54 °C rule, ambient for the guard |
 | 0x20008 | 41 | write | `PL, PL, FF, FF` (45..80 W) or `FF, FF, FF, TDP` (20..82 W) | Performance power |
@@ -72,7 +72,7 @@ Through Windows' own WMI channel `root\wmi hpqBIntM`. Packet = `"SECU"` + comman
 | 0x20008 | 53 | read | `0, 4, 0, 0` | BIOS thermal-throttling flag |
 | 1 | 15 | read | 4 zero bytes | charger status |
 
-Every write is checked by reading back. Out-of-range values throw; nothing is clamped silently. The graphics (MUX) mode is never read or written.
+Power and GPU writes are checked by reading them back, and fan writes by reading the fan speeds; the firmware has no read for the thermal profile. Out-of-range values make `HpBios` throw instead of being clamped; the fan curve keeps its own targets inside 19..48 before they get there. The graphics (MUX) mode is never read or written.
 
 **Wrong laptop:** anything but an OMEN 16-ap0 with board `8E35` and the setup refuses to install. If the app starts and the model or board does not match (or the identity cannot be read), it only monitors and writes nothing. A BIOS other than the validated `F.13` shows a warning.
 
@@ -85,7 +85,7 @@ Every write is checked by reading back. Out-of-range values throw; nothing is cl
 | Settings and log | `C:\ProgramData\SalvaOPM\state.txt`, `log.txt` (256 KB cap). Folder writable by administrators only | changes and events only |
 | PawnIO driver | its official installer 2.2.0, downloaded from its GitHub release, SHA-256 checked, run from the administrators-only folder and deleted | setup, only when missing or older than 2.2.0; uninstall removes it again (PawnIO's own uninstaller) if this setup installed it |
 | OMEN Gaming Hub | **removed at install:** Store app `AD2F1837.OMENCommandCenter`, tasks `OmenInstallMonitor*` and `OmenOverlay*`, folders `Program Files\HP\OmenInstallMonitor` and `\Overlay`; service `HPOmenCap` stopped and disabled | setup |
-| OGH's background, if it ever returns | ended | app start and every 45 s |
+| OGH's background, if it ever returns | ended | app start and every 45 s, except during the wait after Performance |
 | Windows power mode | the AC/DC power-mode setting | on mode changes |
 
 Salva OPM has no service of its own, no telemetry and no auto-update. The app never uses the network; the setup downloads PawnIO once, only when it is missing or older than 2.2.0.
@@ -101,7 +101,7 @@ Salva OPM has no service of its own, no telemetry and no auto-update. The app ne
 
 ## Removing it
 - Open `SalvaOPM-Setup.exe` again → **Uninstall**, or Settings > Apps > Salva OPM.
-- Uninstall puts the firmware back (on the validated laptop only): profile `0x30` with the firmware's own fan control, concurrent TDP baseline, the GPU record read at first start (`00 01 00 57`).
+- Uninstall puts the firmware back (skipped only on a laptop identified as another model): profile `0x30` with the firmware's own fan control, concurrent TDP baseline, the GPU record read at first start (`00 01 00 57`).
 - It sets `HPOmenCap` to Automatic and starts it again; HP's own software may then reinstall OMEN Gaming Hub, as on a stock laptop.
 - It sets the Windows power mode back to Balanced (charger and battery).
 - It removes the program, task, shortcut, Apps entry and settings.

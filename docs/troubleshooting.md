@@ -36,6 +36,6 @@ PowerShell as administrator:
 ```
 
 ## Recovery
-- **Any doubt about heat or fans:** run the setup → **Uninstall**. The firmware takes the fans, GPU and power back at once.
+- **Any doubt about heat or fans:** run the setup → **Uninstall**. The firmware takes the fans and the GPU back at once; a power limit left by Performance lapses within about two minutes.
 - **The app will not start or uninstall:** restart Windows. Without the app, power limits, profile and fan control lapse within about two minutes (measured). The GPU record and concurrent TDP are put back by the app at its next start, or by Uninstall. Then delete the task `SalvaOPM` in Task Scheduler, and the folders `C:\Program Files\Salva OPM` and `C:\ProgramData\SalvaOPM`.
 - Safe Mode does not start the app.
