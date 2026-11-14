@@ -1,4 +1,4 @@
-# Salva OPM 2.4.6: what it does (and doesn't)
+# Salva OPM 2.4.7: what it does (and doesn't)
 
 Everything Salva OPM touches on the HP OMEN 16-ap0 with board **8E35**. Source: `src/` (plain C#, built by `build.cmd` with Windows' own compiler). The one file to run is `dist\SalvaOPM-Setup.exe`. The app works offline; the setup needs internet once, only if PawnIO is not installed yet.
 
@@ -44,6 +44,7 @@ Closing the window keeps the app in the tray. The tray diamond shows the mode (g
   - Each fan follows it from its own chip (CPU fan from CPU, GPU fan from GPU). While the GPU sleeps, both follow the CPU.
   - Limits: 1900–4800 rpm, never falling as it gets hotter, and from 75 °C up never below 2900 rpm (OGH's own lower bound for this board).
 - **Movement:** every 5 s, at most 300 rpm per step. Fans never stop.
+- **85 °C rule** (Auto and Custom): CPU at 85 °C or more for a minute → both fans to 4800 rpm until it is under 80 °C.
 - **Firmware takes the fans** (its own curve) when:
   - on battery;
   - for about two minutes after leaving Performance (so the 55 W limit written on the way out lapses instead of being held), and likewise at start when a limit from the previous session is still set (e.g. right after an update). Choosing Eco or Balanced in that time changes the Windows power mode at once; the firmware gets it when the old limit is gone, because any firmware write would keep the limit alive;
@@ -51,7 +52,7 @@ Closing the window keeps the app in the tray. The tray diamond shows the mode (g
   - the CPU temperature can't be read (PawnIO missing or failing);
   - the fans don't follow what is written (refused 8 times, or far below the level asked for a minute);
   - the app exits, crashes (within about 2 minutes) or is uninstalled.
-- **Thermal guard:** CPU ≥ 95 °C, ambient ≥ 62 °C, or a warm CPU with stalled fans → fans to maximum. Released after a minute below 85 / 54 °C. In every curve, Auto or Custom, and also on battery and during the wait after Performance. Below that the curve in use decides (Auto reaches 4800 rpm at 90 °C).
+- **Thermal guard:** CPU ≥ 95 °C, ambient ≥ 62 °C, or a warm CPU with stalled fans → fans to maximum. Released after a minute below 85 / 54 °C. In every curve, Auto or Custom, and also on battery and during the wait after Performance.
 
 The firmware's own throttling and thermal shutdown are never touched.
 

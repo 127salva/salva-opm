@@ -27,7 +27,7 @@ namespace SalvaOPM
         public static readonly int[] CustomFloor = { 19, 19, 19, 29, 29, 29, 29 };
 
         /// <summary>The one Auto curve, used in every mode: the owner's quiet curve (2026-11-13; Ohman's own table was too loud
-        /// for the owner). 1900 rpm up to 60 C, rising to 4800 at 90 C; both fans follow the hotter chip. The thermal guard backs it up at 95 C.</summary>
+        /// for the owner). 1900 rpm up to 60 C, rising to 4800 at 90 C; both fans follow the hotter chip. HeatPush backs it up.</summary>
         public static FanCurve Auto()
         {
             FanCurve c = new FanCurve();
@@ -95,6 +95,28 @@ namespace SalvaOPM
             if (double.IsNaN(was)) return now;
             if (now > was) return now;
             return was + (now - was) * Smoothing;
+        }
+    }
+
+    /// <summary>Keeps the CPU from sitting hot under a quiet curve: at Hot or more for HoldMs the fans go to maximum until the
+    /// CPU is under Cool. No I/O. An unknown temperature neither starts nor ends it.</summary>
+    public sealed class HeatPush
+    {
+        public int Hot = 85, Cool = 80;
+        public long HoldMs = 60000;
+        public bool Active;
+        private long _since = -1, _last = long.MinValue / 2;
+
+        public bool Tick(double cpu, long nowMs)
+        {
+            if (nowMs - _last > 15000) _since = -1;   // not asked for a while (firmware had the fans): the minute starts over
+            _last = nowMs;
+            if (double.IsNaN(cpu)) return Active;
+            if (Active) { if (cpu < Cool) { Active = false; _since = -1; } }
+            else if (cpu < Hot) _since = -1;
+            else if (_since < 0) _since = nowMs;
+            else if (nowMs - _since >= HoldMs) Active = true;
+            return Active;
         }
     }
 

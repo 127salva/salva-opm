@@ -16,13 +16,13 @@ Both print `self-check: N passed, 0 failed` and return the number of failures as
 | `ModeTests` | every row of the plug / unplug / boot / resume rules |
 | `GovernorTests` | battery-drain and chassis rules, floors, recovery, 3000 random steps staying in range |
 | `PowerRuleTests` | drain detection, charger classification, flap guard |
-| `CurveTests` | Auto and custom curves, clamping, stepping, smoothing |
+| `CurveTests` | Auto and custom curves, clamping, stepping, smoothing, the 85 °C rule |
 | `GuardTests` | thermal guard engage, hold, release |
 | `IdentityTests` | which laptop may be written to |
 | `FirmwareTests` | the allow-list for every type 0–255 and several sizes; value ranges; simulator behaviour |
 | `CoreTests` | the Engine end to end against the simulator: apply order, read-back and rollback, Performance kept for 10 minutes, lapse after Performance and at start-up, TDP changed after a GPU write, fans to firmware on battery or without a temperature, fans not following, crash, exit, conflicts, fail safe, monitoring-only writes nothing |
 | `SettingsTests` | round trip, bad values ignored, older curves raised to the lower bound |
-| `EnduranceTests` | 14 simulated days (one session per day, sometimes restarted within seconds like an update) with random load, unplugging, sleep, mode changes, missing temperatures and 1 % failing BIOS calls. Every 5 s: PL within 45..80, never Performance on battery or saved, every lapse over within 180 s, profile `0x04` never left behind, fans at maximum within 40 s at a CPU of 95 °C (the thermal guard), and no memory growth from day 1 to day 14. Fixed seed, so a failure repeats |
+| `EnduranceTests` | 14 simulated days (one session per day, sometimes restarted within seconds like an update) with random load, unplugging, sleep, mode changes, missing temperatures and 1 % failing BIOS calls. Every 5 s: PL within 45..80, never Performance on battery or saved, every lapse over within 180 s, profile `0x04` never left behind, fans at maximum after 90 s at 85 °C, and no memory growth from day 1 to day 14. Fixed seed, so a failure repeats |
 
 The simulator (`SimFirmware`) encodes behaviour measured on the laptop: concurrent TDP only applies under profile `0x04`; host state lapses about 110 s after the last refresh; fan levels are ignored while the firmware has the fans.
 
@@ -37,7 +37,7 @@ The simulator (`SimFirmware`) encodes behaviour measured on the laptop: concurre
 | Other BIOS versions | none: only `F.13` is validated; the app warns on any other |
 
 ## Every feature: how it is checked
-Status of 2.4.6 (2026-11-14). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` lines recorded in `docs/user-tests.md` and `docs/hardware/evidence.md`. Self-check names are quoted from `src/SelfCheck.cs`.
+Status of 2.4.7 (2026-11-14). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` lines recorded in `docs/user-tests.md` and `docs/hardware/evidence.md`. Self-check names are quoted from `src/SelfCheck.cs`.
 
 | Feature | Self-checks | On the laptop |
 |---|---|---|
@@ -46,6 +46,7 @@ Status of 2.4.6 (2026-11-14). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` l
 | TDP reset by the firmware after a GPU write | "TDP changed after the GPU write: written again at once", "… a second after …" | H3 found it; H3b, H1 (caught 9 s later) and H7 (`written again`) |
 | Auto curve and fan movement | `CurveTests`, "rising temperature: both fans climb …", "Auto curve written at boot …" | levels 19–48 accepted (2.0); Balanced 75–76 °C while gaming on the quiet curve (H1) |
 | Custom curve (Performance only) | custom rows in `CurveTests`; "Custom in Performance …", "the choice and the custom curve survive a restart" | in daily use on 2.1–2.3; not re-tested on its own on 2.4 |
+| 85 °C rule | four rows in `CurveTests`; "85 C for a minute: fans to 4800 rpm"; endurance invariant | H1 (engaged 14:35:00, released 14:46:45) and H5 (22:44:43); removed in 2.4.6, back in 2.4.7 |
 | Thermal guard (CPU ≥ 95 °C, ambient ≥ 62 °C, stalled fans) | `GuardTests`; "thermal guard: CPU >= 95 …", "… on battery takes the fans …", "the thermal guard still takes the fans during the lapse", "a guard during the lapse …: the lapse starts again after it …" | **observed on 2.4.6** (2026-11-14): engaged 04:32:04 at CPU 95 °C while gaming in Performance on a custom curve topping out at 4300 rpm; released 04:37:25, a minute after the game ended |
 | Battery-drain rule (40 %) | `GovernorTests` battery rows | **never observed** |
 | Chassis 54 °C rule | `GovernorTests` chassis rows; "governor (chassis 54) …" | **never observed** |
