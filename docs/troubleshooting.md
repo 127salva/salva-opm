@@ -12,6 +12,8 @@ Log: `C:\ProgramData\SalvaOPM\log.txt` (events only; the previous file is `log.t
 | `No CPU temperature: the firmware drives the fans` | PawnIO is missing (e.g. the setup ran without internet), not started yet, or failing. | Restart Windows once after installing. Then run the setup → Update while online. |
 | `Fan writes failing; retrying once a minute` | Temporary write failures. | Usually clears by itself. |
 | `GPU power preset not accepted by the firmware` | The GPU record read back differently. | Switch mode once. Send the log if it repeats. |
+| `… (back to Balanced)` | Performance could not start: the power data could not be read, a power write failed, or the values did not read back as PL 80/80 and TDP 82 (the message says which). The app went back to Balanced. | Try Performance again. If it repeats, check that no other tuning tool is running and send the log. |
+| `power read failed` | In Performance, the heartbeat could not read the power data. Performance keeps running and the heartbeat keeps trying; the line stays until the next mode change or wake from sleep. | Switch mode once. Send the log if it repeats. |
 | `BIOS … is not the validated F.13` | A different BIOS version. | Repeat the checks in `docs/user-tests.md`. |
 | `another tool keeps changing the firmware …; switched to Balanced` | Something else overwrote Performance's limits four times. | Close other tuning tools; check that OMEN Gaming Hub is not back. |
 | `Performance needs the charger connected` | Performance was chosen on battery, or with a charger below the laptop's requirement. | Plug in the original charger. |

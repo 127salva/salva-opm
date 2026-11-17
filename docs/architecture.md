@@ -65,7 +65,7 @@ The Engine never touches WMI, drivers or Windows directly; everything goes throu
 - **Fail closed on identity.** On anything but a 16-ap0 with board `8E35` the setup refuses to install, and the app only monitors. The uninstall's firmware restore is skipped only on a laptop positively identified as another model; when the identity cannot be read it still restores, because the GPU record does not lapse by itself.
 - **One copy per PC.** A machine-wide lock (`Global\SalvaOPM`) keeps a second Windows session from running a second copy.
 - **Saved mode is never Performance.** A restart always comes back in Eco or Balanced.
-- **The GPU record is put back by the app.** Unlike power limits it does not lapse: exit and fail safe write Boost, the next start writes the preset of its mode; uninstall writes the record read at first start.
+- **The GPU record is put back by the app.** Unlike power limits it does not lapse: exit and fail safe write Boost when they leave Performance (in Eco or Balanced the mode's own preset stays), the next start writes the preset of its mode; uninstall writes the record read at first start.
 - **Sleep is detected from the timer.** This laptop has Modern Standby, which sends no resume event to the app: a gap of over 30 s between 5 s ticks counts as a wake-up.
 - **PawnIO is downloaded, not shipped.** Its installer has no stated redistribution terms, so the setup downloads the pinned release once, checks its SHA-256 and runs it from the administrators-only folder.
 - **Unsigned on purpose.** No code-signing certificate; each release publishes the SHA-256 of the setup instead (README explains SmartScreen).

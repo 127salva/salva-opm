@@ -22,7 +22,7 @@ The full account of every firmware call and every change to the PC is in [docs/w
 
 The exe is not code-signed, so Windows SmartScreen warns about an unknown publisher ("More info" → "Run anyway"). Compare the hash first.
 
-The setup installs the PawnIO driver (CPU temperature; downloaded once from its official release and hash-checked) and **removes OMEN Gaming Hub**. Without internet and without PawnIO it still installs; the firmware then drives the fans. Run the setup again to update or uninstall. Uninstall puts the firmware back and removes the app and PawnIO. It does not reinstall OMEN Gaming Hub (get it from the Microsoft Store), it sets the `HPOmenCap` service to Automatic whatever it was before, and PawnIO's own uninstaller leaves its driver package in the Windows driver store; [docs/what-it-does.md](docs/what-it-does.md) lists each step.
+The setup installs the PawnIO driver (CPU temperature; downloaded once from its official release and hash-checked) and **removes OMEN Gaming Hub**. Without internet and without PawnIO it still installs; the firmware then drives the fans. Run the setup again to update or uninstall. Uninstall puts the firmware back and removes the app, and PawnIO too if this setup installed it. It does not reinstall OMEN Gaming Hub (get it from the Microsoft Store), it sets the `HPOmenCap` service to Automatic whatever it was before, and PawnIO's own uninstaller leaves its driver package in the Windows driver store; [docs/what-it-does.md](docs/what-it-does.md) lists each step.
 
 ## Build
 Requirements: Windows 11, or Windows 10 1903 or later, x64. Nothing to install or download: the build uses the C# compiler that ships with Windows (.NET Framework 4.8).

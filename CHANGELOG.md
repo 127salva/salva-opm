@@ -1,6 +1,6 @@
 # Changelog
 
-Versions follow [semantic versioning](https://semver.org). Dates are when the build was made.
+Versions are major.minor.patch; `CONTRIBUTING.md` says how each number was used. Dates are when the build was made.
 
 ## 2.4.7 - 2026-11-14
 ### Changed
