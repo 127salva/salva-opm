@@ -8,7 +8,7 @@ Its logic follows Ohman (github.com/P4R1H/Ohman, GPL-3.0), except the Auto fan c
 One page:
 - **Mode switch:** Eco | Balanced | Performance. Performance is greyed out on battery or with a charger below the laptop's requirement.
 - **Fan switch:** Auto alone in Eco and Balanced; Auto | Custom in Performance.
-- **Curve:** the curve in use. Custom has 7 points at 60–90 °C that drag up and down; the point under the mouse shows its percentage of top speed.
+- **Curve:** the curve in use. Custom has 7 points at 60–90 °C that drag up and down (Shift-drag moves the whole curve); the point under the mouse shows its percentage of top speed.
 - **Info line:** CPU and GPU temperature and fan speeds on the left, the version on the right.
 - **Warning line:** amber, above the curve, only when something is wrong.
 
