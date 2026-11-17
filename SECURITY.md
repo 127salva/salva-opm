@@ -8,7 +8,7 @@ The app runs elevated (a logon task with highest privileges) because the HP BIOS
 
 | Area | Practice |
 |---|---|
-| Firmware calls | Only the pairs in `FirmwareRules` (`src/Firmware.cs`) can be sent; a self-check proves nothing else passes. Values are range-checked. Power and GPU writes made while the app runs are read back, and fan writes are checked against the measured fan speeds; writes on the way out (leaving Performance, fail safe, uninstall) are not read back. |
+| Firmware calls | Only the pairs in `FirmwareRules` (`src/Firmware.cs`) can be sent; a self-check proves nothing else passes. Values are range-checked. Power and GPU writes made while the app runs are read back, and fan writes are checked against the measured fan speeds; writes on the way out (leaving Performance, fail safe, start-up TDP repair, uninstall) are not read back. |
 | Wrong hardware | Anything but an OMEN 16-ap0 with board `8E35`: the setup refuses to install. If the identity does not match when the app starts (or cannot be read): monitoring only, no writes. |
 | Kernel driver | PawnIO's official signed build. The app loads one signed module and calls one read function (`ioctl_read_smn`). No port, MSR or EC access. |
 | PawnIO installer | Not shipped. The setup downloads the pinned release over HTTPS into memory, checks its SHA-256 (`Setup.PawnIoSha256`), writes it to the administrators-only data folder and runs it from there, so no user-level process can swap it after the check. |
