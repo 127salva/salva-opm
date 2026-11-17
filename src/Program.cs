@@ -50,8 +50,8 @@ namespace SalvaOPM
                 case "--dry-run":
                     {
                         Console_();
-                        int minutes = 5;
-                        if (args.Length > 1) int.TryParse(args[1], out minutes);
+                        int minutes, n;
+                        minutes = args.Length > 1 && int.TryParse(args[1], out n) && n > 0 ? n : 5;   // a bad value keeps the default
                         return Tools.DryRun(Console.Out, minutes);
                     }
                 case "--install": return Setup.Install(args.Length > 1 && args[1] == "--quiet");

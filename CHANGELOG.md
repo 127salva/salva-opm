@@ -7,6 +7,7 @@ Versions are major.minor.patch; `CONTRIBUTING.md` says how each number was used.
 - A mode chosen from the tray before start-up finished (the laptop's identity still unread, e.g. WMI not ready at logon) was written to the firmware. Mode choices now wait until start-up is done.
 - A concurrent TDP outside 20..82 read on entering Performance was kept as the baseline; leaving Performance then failed and stopped the app (fail safe). Such a value is no longer kept.
 - `--check` said that without PawnIO the fans use a fixed safe level; the firmware drives them.
+- `--dry-run abc` (or 0) ran for no time at all; a bad value now keeps the default 5 minutes.
 - `--dry-run` ran the thermal guard every 5 s; it now uses the app's 10 s, so it shows the guard when the app would engage it.
 ### Removed
 - Unused members (`Engine.CurrentPl`, `Engine.GpuRecord`, `PowerData.Telemetry`, `Settings.FilePath`, `ModeController.PowerOk`, `NullPowerMode.Calls`) and the GPU read they needed in monitoring-only mode; the uninstall question is kept in one place.
