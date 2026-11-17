@@ -25,7 +25,6 @@ namespace SalvaOPM
         public int[] Curve = (int[])FanCurve.DefaultCustom.Clone();
 
         private readonly string _path;
-        public string FilePath { get { return _path; } }
 
         public Settings(string directory) { _path = Path.Combine(directory, "state.txt"); }
 

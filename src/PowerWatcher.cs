@@ -185,9 +185,8 @@ namespace SalvaOPM
 
     public sealed class NullPowerMode : IPowerModeSetter
     {
-        public int Calls;
         public Mode Last = Mode.Balanced;
-        public void Set(Mode mode, bool onAc) { Calls++; Last = mode; }
+        public void Set(Mode mode, bool onAc) { Last = mode; }
     }
 
     public sealed class WindowsPowerMode : IPowerModeSetter

@@ -34,7 +34,6 @@ namespace SalvaOPM
 
         public Mode Effective { get { return _auto ? Mode.Eco : _user; } }
         public bool AutoEco { get { return _auto; } }
-        public bool PowerOk { get { return _powerOk; } }
         public Mode SavedMode { get { return _saved; } }
         public bool PerformanceAllowed { get { return _powerOk; } }
 

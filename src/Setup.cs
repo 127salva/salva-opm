@@ -19,7 +19,7 @@ namespace SalvaOPM
 {
     /// <summary>
     /// Install and uninstall, all from this one exe (SalvaOPM-Setup.exe). Install: copies itself to
-    /// Program Files\Salva OPM, downloads the official PawnIO installer when PawnIO is missing (pinned release, SHA-256
+    /// Program Files\Salva OPM, downloads the official PawnIO installer when PawnIO is missing or older than 2.2.0 (pinned release, SHA-256
     /// checked, run from the administrators-only data folder), registers the logon task, a Start-menu shortcut and an Apps
     /// entry, removes OMEN Gaming Hub and starts the app. Uninstall puts the firmware back (profile 0x30 with fans by BIOS,
     /// concurrent TDP baseline, the GPU record read at first start), re-enables the HP service and removes every file, key
@@ -321,13 +321,13 @@ namespace SalvaOPM
 
         // ---------------- uninstall ----------------
 
+        public const string UninstallQuestion = "Uninstall Salva OPM?\r\n\r\nThe fans, the GPU and the Windows power mode go back to their defaults, and the app's files are removed. The PawnIO driver is removed too if this setup installed it.";
         public const string RemovedMessage = "Salva OPM was removed and everything it changed was put back. OMEN Gaming Hub is the one exception: install it from the Microsoft Store if you want it.";
 
         public static int Uninstall(bool quiet)
         {
             if (!Program.IsAdmin()) return Elevate(quiet ? "--uninstall --quiet" : "--uninstall");
-            if (!quiet && MessageBox.Show("Uninstall Salva OPM?\r\n\r\nThe fans, the GPU and the Windows power mode go back to their defaults, and the app's files are removed. The PawnIO driver is removed too if this setup installed it.",
-                "Salva OPM", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK) return 1223;
+            if (!quiet && MessageBox.Show(UninstallQuestion, "Salva OPM", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK) return 1223;
             StopRunning();
             Settings saved = Settings.Load(Settings.DefaultDirectory());   // read before the folder may be replaced below
             // the log goes to the folder only when it is administrators-only; RemoveAll deletes the folder at the end
@@ -427,8 +427,7 @@ namespace SalvaOPM
             _go.Click += delegate { if (_done) Close(); else Work(true); };
             _remove.Click += delegate
             {
-                if (MessageBox.Show("Uninstall Salva OPM?\r\n\r\nThe fans, the GPU and the Windows power mode go back to their defaults, and the app's files are removed. The PawnIO driver is removed too if this setup installed it.",
-                    "Salva OPM", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK) Work(false);
+                if (MessageBox.Show(Setup.UninstallQuestion, "Salva OPM", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK) Work(false);
             };
             Controls.Add(_go);
             Controls.Add(_remove);

@@ -2,6 +2,12 @@
 
 Versions are major.minor.patch; `CONTRIBUTING.md` says how each number was used. Dates are when the build was made.
 
+## Unreleased
+### Fixed
+- `--check` said that without PawnIO the fans use a fixed safe level; the firmware drives them.
+### Removed
+- Unused members (`Engine.CurrentPl`, `Settings.FilePath`, `ModeController.PowerOk`, `NullPowerMode.Calls`); the uninstall question is kept in one place.
+
 ## 2.4.7 - 2026-11-14
 ### Changed
 - The 85 °C rule is back, as in 2.4.5 (the owner's choice after trying 2.4.6): CPU at 85 °C or more for a minute puts both fans at maximum until it is under 80 °C. The thermal guard at 95 °C is unchanged.

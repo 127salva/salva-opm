@@ -77,7 +77,6 @@ namespace SalvaOPM
         public ISensors Sensors { get { return _sensors; } }
         public Mode Effective { get { return _ctl.Effective; } }
         public bool InPerformance { get { return _inPerf; } }
-        public int CurrentPl { get { return _currentPl; } }
         public bool OnAc { get { return _onAc; } }
         public int[] Levels { get { return new int[] { _lvlCpu, _lvlGpu }; } }
         public FanCurve AutoCurve { get { return _auto; } }

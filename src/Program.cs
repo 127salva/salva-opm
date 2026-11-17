@@ -221,7 +221,7 @@ namespace SalvaOPM
             if (verbose)
             {
                 Version pv = PawnIoModule.InstalledVersion();
-                o.WriteLine((pv != null ? "OK       PawnIO " + pv : "INFO     PawnIO not installed (the setup installs it; without it fans use a fixed safe level)"));
+                o.WriteLine((pv != null ? "OK       PawnIO " + pv : "INFO     PawnIO not installed (the setup installs it; without it the firmware drives the fans)"));
                 o.WriteLine((File.Exists(Path.Combine(Environment.SystemDirectory, "nvml.dll")) ? "OK       NVIDIA nvml.dll (GPU temperature)" : "INFO     no nvml.dll: GPU temperature unavailable"));
                 o.WriteLine(_fail == 0 ? "All prerequisites present." : _fail + " prerequisite(s) missing.");
             }
