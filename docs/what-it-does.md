@@ -31,7 +31,7 @@ Closing the window keeps the app in the tray. The tray diamond shows the mode (g
 
 **Safety in Performance (OGH's own rules):**
 - **Max Battery Drain 40 %:** draining below 60 % while on the charger, with the GPU busy (load over 30 %, or unknown), lowers PL1/PL2 1 W per 5 s, down to 45 W.
-- **Chassis 54 °C:** GPU target drops to 75 with PPAB off and PL1/PL2 drop 5 W per 30 s; below 49 °C, Max comes back.
+- **Chassis 54 °C:** GPU target drops to 75 with PPAB off and PL1/PL2 drop 5 W per 30 s; at 49 °C or below, Max comes back.
 
 ## Fans
 - **Auto** = one quiet curve, used in every mode. Both fans follow the hotter chip:
@@ -72,7 +72,7 @@ Through Windows' own WMI channel `root\wmi hpqBIntM`. Packet = `"SECU"` + comman
 | 0x20008 | 53 | read | `0, 4, 0, 0` | BIOS thermal-throttling flag |
 | 1 | 15 | read | 4 zero bytes | charger status |
 
-Power and GPU writes made while the app runs are checked by reading them back, and fan writes by reading the fan speeds (from 2500 rpm up, over a minute). The firmware has no known read for the thermal profile, and the writes on the way out (leaving Performance, fail safe, start-up TDP repair, uninstall) are not read back. Out-of-range values make `HpBios` throw instead of being clamped; the fan curve keeps its own targets inside 19..48 before they get there. The graphics (MUX) mode is never read or written.
+Power and GPU writes made while the app runs are checked by reading them back, and fan writes by reading the fan speeds (from 2500 rpm up, over a minute). The firmware has no known read for the thermal profile, and the writes on the way out (leaving Performance, fail safe, start-up TDP repair, uninstall) are not read back; the heartbeat's re-send of Performance power is checked by the next heartbeat. Out-of-range values make `HpBios` throw instead of being clamped; the fan curve keeps its own targets inside 19..48 before they get there. The graphics (MUX) mode is never read or written.
 
 **Wrong laptop:** anything but an OMEN 16-ap0 with board `8E35` and the setup refuses to install. If the app starts and the model or board does not match (or the identity cannot be read), it only monitors and writes nothing. A BIOS other than the validated `F.13` shows a warning.
 
@@ -82,7 +82,7 @@ Power and GPU writes made while the app runs are checked by reading them back, a
 | Program | `C:\Program Files\Salva OPM\SalvaOPM.exe` | setup |
 | Logon task | `SalvaOPM` (your logon, highest privileges) | setup; removed by uninstall |
 | Start-menu shortcut, Apps entry | `Salva OPM` | setup; removed by uninstall |
-| Settings and log | `C:\ProgramData\SalvaOPM\state.txt`, `log.txt` (256 KB cap). Folder writable by administrators only | changes and events only |
+| Settings and log | `C:\ProgramData\SalvaOPM\state.txt`, `log.txt` (256 KB, then one older copy `log.txt.old`), `running.flag` (removed by a clean exit), `setup-result.txt` (the last setup's message). Folder writable by administrators only | changes and events only |
 | PawnIO driver | its official installer 2.2.0, downloaded from its GitHub release, SHA-256 checked, run from the administrators-only folder and deleted | setup, only when missing or older than 2.2.0; uninstall removes it again (PawnIO's own uninstaller) if this setup installed it |
 | OMEN Gaming Hub | **removed at install:** Store app `AD2F1837.OMENCommandCenter`, tasks `OmenInstallMonitor*` and `OmenOverlay*`, folders `Program Files\HP\OmenInstallMonitor` and `\Overlay`; service `HPOmenCap` stopped and disabled; its running helpers (`OverlayHelper`, `OMENKeyboardRemapper`, `OMENKeyboardRemapLauncher`, `OmenCap`) ended | setup |
 | OGH's background, if it ever returns | ended | app start and every 45 s, except during the wait after Performance |
@@ -93,7 +93,7 @@ Salva OPM has no service of its own, no telemetry and no auto-update. The app ne
 ## What each outside piece is, and how it was checked
 | Piece | Source | Checked |
 |---|---|---|
-| Fan, profile and power calls | Linux kernel `hp-wmi.c` lists board 8E35 and drives fans with the same call (`0x2E`), with the same `0x10` trigger and 120 s timeout; Ohman lists 8E35 as owner-verified | run on this laptop (`docs/hardware/evidence.md` sections 8 and 12) |
+| Fan, profile and power calls | Linux kernel `hp-wmi.c` lists board 8E35 and drives fans with the same call (`0x2E`), with the same `0x10` trigger and 120 s timeout; Ohman lists 8E35 as owner-verified | run on this laptop (`docs/hardware/evidence.md` sections 0, 12 and 14) |
 | Windows power mode | `PowerSetUserConfiguredACPowerMode` / `DCPowerMode`, documented by Microsoft; the three GUIDs are the documented ones | Windows setting follows the mode |
 | PawnIO | signed by "Microsoft Windows Hardware Compatibility Publisher"; only the read call `ioctl_read_smn` is used | running on this PC with Memory Integrity (HVCI) on |
 | GPU temperature | NVIDIA's own `nvml.dll` from `System32`; not polled while the GPU sleeps | 20 open/read/close cycles: no handle growth |

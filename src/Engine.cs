@@ -65,7 +65,6 @@ namespace SalvaOPM
         public bool Halted;                    // an unexpected error: nothing is written until the app restarts
         public int[] Fans;                     // last fan reading, 100 rpm units
         public int Chassis = -1;               // last ambient (index 1) reading
-        public byte[] GpuRecord;               // last GPU record read back
 
         public Engine(HpBios bios, Settings settings, IPowerModeSetter winMode, ISensors sensors, GovernorConfig cfg, Action<string> log)
         {
@@ -140,7 +139,6 @@ namespace SalvaOPM
             if (MonitorOnly)
             {
                 _ctl.Boot(_s.SavedMode, powerOk);
-                GpuRecord = _bios.ReadGpu();
                 Log("monitoring only: " + MonitorReason);
                 Fire();
                 return true;
@@ -290,8 +288,9 @@ namespace SalvaOPM
         {
             PowerData p = _bios.ReadPower();
             if (p == null) return Fail("could not read power data");
-            // baseline = concurrent TDP before the first Performance write; never overwrite it with a left-over 82
-            if (p.Tdp != PerfTdp && p.Tdp != _s.BaselineTdp) { _s.BaselineTdp = p.Tdp; _s.Save(); }
+            // baseline = concurrent TDP before the first Performance write; never overwrite it with a left-over 82, and keep
+            // only a value HpBios.WriteTdp accepts (anything else would throw when leaving Performance)
+            if (p.Tdp != PerfTdp && p.Tdp != _s.BaselineTdp && p.Tdp >= HpBios.TdpMin && p.Tdp <= HpBios.TdpMax) { _s.BaselineTdp = p.Tdp; _s.Save(); }
             if (!_bios.WritePowerLimits(PerfPl)) return Fail("PL1/PL2 write failed");
             if (!_bios.WriteTdp(PerfTdp)) return Fail("concurrent TDP write failed");
             PowerData v = _bios.ReadPower();
@@ -339,17 +338,17 @@ namespace SalvaOPM
         }
 
         /// <summary>Writes a GPU record if it differs, verified by read-back of cTGP, PPAB and GPS (Ohman always writes dState 1;
-        /// whether this firmware echoes that byte is unverified, so it is not part of the check). A record the firmware did not
-        /// take is not retried until the next mode change. The first record ever read is kept for uninstall.</summary>
+        /// this laptop echoes it, evidence section 12, but the check leaves that byte out so a firmware that keeps dState 0
+        /// causes no rewrite loop). A record the firmware did not take is not retried until the next mode change. The first
+        /// record ever read is kept for uninstall.</summary>
         private bool ApplyGpu(byte[] want)
         {
             byte[] cur = _bios.ReadGpu();
             if (cur != null && _s.FactoryGpu == null) { _s.FactoryGpu = cur; _s.Save(); }
-            if (GpuMatches(cur, want) && (cur[2] == want[2] || Same(want, _gpuWritten))) { GpuRecord = cur; return true; }
+            if (GpuMatches(cur, want) && (cur[2] == want[2] || Same(want, _gpuWritten))) return true;
             if (Same(want, _gpuRefused)) return false;
             _bios.WriteGpu(want);
             byte[] v = _bios.ReadGpu();
-            GpuRecord = v;
             if (GpuMatches(v, want))
             {
                 _gpuWritten = want; _gpuRefused = null; Log("GPU record -> " + BitConverter.ToString(want));

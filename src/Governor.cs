@@ -42,7 +42,7 @@ namespace SalvaOPM
         public bool PpabOn;
         public bool IrCut;              // chassis rule currently holding the GPU back
         public int Tick;
-        public int GpsBaseline;         // GPU record read before the first reduction (restored on release)
+        public int GpsBaseline;         // GPU target before the first reduction (the Max preset's), restored on release
         public bool PpabBaseline;
     }
 
@@ -88,7 +88,7 @@ namespace SalvaOPM
                 else if (i.IrTemp <= c.IrRelease && s.IrCut)
                 {
                     s.IrCut = false;
-                    s.Gps = s.GpsBaseline;                              // restore the GPU record read before the reduction
+                    s.Gps = s.GpsBaseline;                              // restore the GPU target from before the reduction
                     s.PpabOn = s.PpabBaseline;
                 }
                 // between release and overheat: hold

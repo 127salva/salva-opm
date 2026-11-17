@@ -632,6 +632,11 @@ namespace SalvaOPM
             r = new Rig(crashed, NewDir()); r.St.BaselineTdp = 30;
             Check(r.Core.Boot(true, 0) && crashed.Tdp == 30, "boot after a crash in Performance: concurrent TDP repaired to 30");
 
+            r = new Rig(); r.Sim.Tdp = 0; r.Core.Boot(true, 0);
+            Rig odd = r;
+            Check(!Throws(() => { odd.Core.Select(Mode.Performance, 0); odd.Core.Select(Mode.Balanced, 0); }) && odd.St.BaselineTdp == -1 && !odd.Core.Halted,
+                "a concurrent TDP outside 20..82 is never kept as the baseline (leaving Performance would throw)");
+
             r = new Rig(); r.Sim.FailAll = true;
             Check(!r.Core.Boot(true, 0) && r.Core.Failed, "WMI not ready at logon -> failure, no crash");
             r.Sim.FailAll = false;

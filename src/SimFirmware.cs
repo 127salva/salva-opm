@@ -11,7 +11,7 @@ namespace SalvaOPM
     /// plus the second-source behaviour from Ohman / Linux hp-wmi (section 11, marked there as not yet verified here):
     ///  - concurrent TDP writes apply only while profile 0x04 is active (steps 2, 2b, 5); the value itself never expires;
     ///  - host state (profile, PL1/PL2, held fan levels) lapses ~110 s after the last refresh; type 16, profile and PL
-    ///    writes refresh it (steps 6-8 for 16; writes = assumption);
+    ///    writes refresh it (type 16: steps 6-8; profile writes: section 14; PL writes assumed);
     ///  - with "fans by BIOS" set in the profile write the firmware drives the fans and ignores levels;
     ///  - the GPU record persists until changed (GPU step 3).
     /// It enforces the same allow-list as the real transport and has a virtual clock driven by the caller.
@@ -26,7 +26,6 @@ namespace SalvaOPM
         public byte HostPl1, HostPl2;            // 0 = no host limit
         public byte Pl4;
         public byte Tdp = 30;
-        public byte Telemetry = 52;
         public byte[] Gpu = { 0, 1, 0, 87 };     // as read on this laptop
         public int OwnFanCpu = 21, OwnFanGpu = 19; // the firmware's own idle levels (as read on this laptop)
         public int HeldCpu = -1, HeldGpu = -1;   // levels written by the host, -1 = none
@@ -34,7 +33,7 @@ namespace SalvaOPM
         public bool Throttling;
         public byte[] Charger = { 1, 0xAE, 0, 9 };  // MeetsRequirement, as read on this laptop
         public long KeepAliveMs = -1;             // last refresh of host state, -1 = none held
-        public bool EchoDState = true;            // false: the firmware keeps dState 0 whatever is written (unverified here)
+        public bool EchoDState = true;            // as on this laptop (section 12); false: a firmware that keeps dState 0
         public int TdpAfterGpuWrite = -1;         // once: the next GPU write sets concurrent TDP to this (seen on the laptop: 45)
         public long TdpResetDelayMs;              // ... that long after the write (on the laptop about 1 s)
         private long _tdpResetAt = -1; private byte _tdpResetTo;
@@ -113,7 +112,7 @@ namespace SalvaOPM
                     if (input[0] != 0xFF || input[1] != 0xFF) KeepAliveMs = NowMs;
                     break;
                 case 42:
-                    r.Data[0] = Telemetry; r.Data[3] = HostPl1; r.Data[4] = HostPl2; r.Data[6] = Pl4; r.Data[7] = Tdp;
+                    r.Data[3] = HostPl1; r.Data[4] = HostPl2; r.Data[6] = Pl4; r.Data[7] = Tdp;
                     break;
                 case 45:
                     int[] f = FansNow();

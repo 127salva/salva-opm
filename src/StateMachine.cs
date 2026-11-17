@@ -19,7 +19,7 @@ namespace SalvaOPM
     }
 
     /// <summary>
-    /// All mode decisions (docs/hardware/evidence.md, approved plan "Power-state automation"):
+    /// All mode decisions (OGH's power rules, docs/hardware/evidence.md section 8c):
     ///  - persisted value is only Eco or Balanced; Unleashed is saved as Balanced (so a boot after Unleashed gives Balanced);
     ///  - losing power (unplug or a charger below requirement) switches to an automatic Eco, unless Eco was already chosen by hand;
     ///  - power back while the Eco was automatic -> always Balanced;

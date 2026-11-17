@@ -64,7 +64,6 @@ namespace SalvaOPM
 
     public sealed class PowerData
     {
-        public int Telemetry;   // byte 0: mirrors the ACPI THRM zone, not used for decisions
         public int Pl1;         // byte 3 (host-set limit, 0 = none)
         public int Pl2;         // byte 4
         public int Pl4;         // byte 6
@@ -79,7 +78,7 @@ namespace SalvaOPM
         public const int PlMin = 45, PlMax = 80;
         public const int TdpMin = 20, TdpMax = 82;  // 82 = SPG 27 W + TppMinValue 55, accepted under 0x04 (step 5)
         public const int GpsMin = 75, GpsMax = 87;
-        public const int FanMin = 19, FanMax = 48;  // this board's own fan table (type 47 top = 48) and OGH's bounds; never 0..18
+        public const int FanMin = 19, FanMax = 48;  // OGH's own bounds for a custom curve on this board (evidence sections 3, 11), accepted on the laptop (section 12); never 0..18
 
         // Ohman's GPU presets [cTGP, PPAB, dState, GPS] (Platform.cs)
         public static readonly byte[] GpuBase = { 0, 0, 1, 75 };
@@ -111,7 +110,7 @@ namespace SalvaOPM
             FwReply r = _fw.Execute(FirmwareRules.Omen, 42, new byte[0], 128);
             if (!r.Ok || r.Data.Length < 8) return null;
             PowerData p = new PowerData();
-            p.Telemetry = r.Data[0]; p.Pl1 = r.Data[3]; p.Pl2 = r.Data[4]; p.Pl4 = r.Data[6]; p.Tdp = r.Data[7];
+            p.Pl1 = r.Data[3]; p.Pl2 = r.Data[4]; p.Pl4 = r.Data[6]; p.Tdp = r.Data[7];
             return p;
         }
 

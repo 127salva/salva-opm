@@ -185,6 +185,7 @@ namespace SalvaOPM
 
         public void Choose(Mode m)
         {
+            if (!_booted) return;   // the identity is not known yet: nothing may be written
             long now = Now();
             if (now - _lastChoose < 1000) return;   // no rapid profile toggling
             _lastChoose = now;
@@ -290,7 +291,7 @@ namespace SalvaOPM
             base.ExitThreadCore();
         }
 
-        /// <summary>The logo: a red diamond, drawn so no image file ships with the app.</summary>
+        /// <summary>The logo: a red diamond, drawn at run time for the window and the tray (res\app.ico is only the exe's icon).</summary>
         public static Icon MakeIcon() { return MakeIcon(Color.FromArgb(0xF6, 0x7A, 0x7D), Color.FromArgb(0xB8, 0x2A, 0x2E)); }
 
         public static Icon MakeIcon(Color light, Color dark)

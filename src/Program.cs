@@ -273,6 +273,7 @@ namespace SalvaOPM
             {
                 DateTime end = DateTime.Now.AddMinutes(minutes);
                 long t0 = Environment.TickCount;
+                int loops = 0;
                 while (DateTime.Now < end)
                 {
                     s.Poll();
@@ -286,7 +287,7 @@ namespace SalvaOPM
                     i.GpuUsage = double.IsNaN(s.GpuLoad) ? 100 : (int)s.GpuLoad; i.IrTemp = ir;
                     i.Throttling = b.ReadThrottling() == 1 || (!double.IsNaN(s.CpuTemp) && s.CpuTemp >= 90);
                     GovernorOutput r = Governor.Step(cfg, st, i);
-                    guard.Tick(s.CpuTemp, amb, f, Environment.TickCount - t0);
+                    if (loops++ % 2 == 0) guard.Tick(s.CpuTemp, amb, f, Environment.TickCount - t0);   // every 10 s, as the app (Engine.GuardMs)
                     int[] want = auto.Target(s.CpuTemp, s.GpuTemp);
                     o.WriteLine(string.Format("{0:HH:mm:ss}  cpu {1} gpu {2} amb {3}  fans {4}  live PL {5} TDP {6}  ->  curve {7}/{8}  guard {9}  Performance PL {10} GPS {11}",
                         DateTime.Now, Fmt(s.CpuTemp), s.GpuAsleep ? "zz" : Fmt(s.GpuTemp), amb, f == null ? "?" : f[0] + "/" + f[1],

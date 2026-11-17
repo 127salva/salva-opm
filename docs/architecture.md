@@ -56,8 +56,8 @@ The Engine never touches WMI, drivers or Windows directly; everything goes throu
 
 ## Key design decisions
 - **Allow-list at the transport.** `FirmwareRules.IsAllowed` names every (command, type, input size, output size) the app may send. Both transports enforce it.
-- **Read-back, not return codes.** The firmware answers `0` to writes it ignores (measured). Power and GPU writes made while running are verified by a read; fan writes are checked against the measured fan speeds (from 2500 rpm up, over a minute). The firmware has no known read for the thermal profile, and the writes on the way out (leaving Performance, fail safe, start-up TDP repair, uninstall) are not read back.
-- **The firmware is the fallback.** The firmware forgets host state (power limits, profile, fan levels) about two minutes after the last refresh, so after a crash or a hang it takes them back by itself. The GPU record is the exception: it stays until the app starts again (see below).
+- **Read-back, not return codes.** The firmware answers `0` to writes it ignores (measured). Power and GPU writes made while running are verified by a read; fan writes are checked against the measured fan speeds (from 2500 rpm up, over a minute). The firmware has no known read for the thermal profile, and the writes on the way out (leaving Performance, fail safe, start-up TDP repair, uninstall) are not read back; the heartbeat's re-send of Performance power is checked by the next heartbeat.
+- **The firmware is the fallback.** The firmware forgets host state (power limits, profile, fan levels) about two minutes after the last refresh, so after a crash or a hang it takes them back by itself. The GPU record and concurrent TDP are the exceptions: they stay until the app starts again (see below).
 - **Type 16 only before a fan write.** That query arms the firmware's "host controls the fans" state; sending it otherwise can hold the fans.
 - **Lapse after Performance.** Power limits cannot be cleared by a write, only by letting them lapse. After Performance the app stays silent with the firmware driving the fans: at least 125 s, until PL reads 0/0 (at most 180 s); if the thermal guard has to act in that time, the wait starts again when it releases.
 - **Lapse at start-up too.** A host power limit found at start (the previous session ended moments ago: update, crash) is left to lapse the same way.
@@ -73,7 +73,7 @@ The Engine never touches WMI, drivers or Windows directly; everything goes throu
 - **License GPL-3.0-or-later**, as Ohman, whose logic it follows; adapted files say so in their header.
 
 ## State on disk
-`C:\ProgramData\SalvaOPM\state.txt` (key=value): saved mode, the concurrent-TDP baseline, the GPU record read before the first write, Performance's fan choice, the custom curve. `log.txt` beside it holds events (256 KB, one rotation).
+`C:\ProgramData\SalvaOPM\state.txt` (key=value): saved mode, the concurrent-TDP baseline, the GPU record read before the first write, Performance's fan choice, the custom curve. `log.txt` beside it holds events (256 KB, one rotation to `log.txt.old`); `running.flag` is there while the app runs (left behind by a crash) and `setup-result.txt` holds the last setup's message.
 
 ## Source of the firmware facts
 `docs/hardware/evidence.md` records how each call, value and behaviour was established: decoded from OGH, taken from Ohman or the Linux `hp-wmi` driver, or measured on the laptop.
