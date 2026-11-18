@@ -55,6 +55,13 @@ namespace SalvaOPM
             return 1 - u * u * u * u;
         }
 
+        /// <summary>An ease-in-out (cubic) for something moving on screen: slow start, slow stop; t is clamped to 0..1.</summary>
+        public static double EaseInOut(double t)
+        {
+            t = Math.Max(0, Math.Min(1, t));
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.Pow(-2 * t + 2, 3) / 2;
+        }
+
         public static Color Mix(Color a, Color b, double k)
         {
             k = Math.Max(0, Math.Min(1, k));
@@ -66,21 +73,10 @@ namespace SalvaOPM
         /// <summary>A small readout pill (graph hover, curve point) with its top-left corner at (x, y).</summary>
         public static void Pill(Graphics g, string s, float x, float y)
         {
-            Size ls = Measure(s, Mono);
             SizeF p = PillSize(s);
-            Fill(g, PillBg, new RectangleF(x, y, p.Width, p.Height), D(RSmall));
-            Text(g, s, Mono, TextB, (int)(x + D(7)), (int)(y + (p.Height - ls.Height) / 2f));
-        }
-
-        /// <summary>A faint light line along the top edge of something you can press (light catching the material).</summary>
-        public static void TopEdge(Graphics g, RectangleF r, float radius)
-        {
-            Region old = g.Clip;
-            g.SetClip(new RectangleF(r.X, r.Y, r.Width, radius));
-            using (Pen p = new Pen(Color.FromArgb(0x1C, 0xFF, 0xFF, 0xFF), 1))
-            using (GraphicsPath path = Round(new RectangleF(r.X + 0.5f, r.Y + 0.5f, r.Width - 1, r.Height - 1), radius))
-                g.DrawPath(p, path);
-            g.Clip = old;
+            RectangleF r = new RectangleF(x, y, p.Width, p.Height);
+            Fill(g, PillBg, r, D(RSmall));
+            TextCenter(g, s, Mono, TextB, Rectangle.Round(r));   // centred by the renderer, as on every DPI
         }
 
         /// <summary>A chip temperature's colour: normal, amber from 85 C (the 85 C rule), red from 95 C (the thermal guard).</summary>
@@ -230,6 +226,7 @@ namespace SalvaOPM
             }
             else if ((e.KeyCode == Keys.Enter || e.KeyCode == Keys.Space) && _focus != Index && !IsDisabled(_focus))
             {
+                _keyChose = true; _keyAt = Environment.TickCount;   // never animate keyboard actions
                 Action<int> h = Picked;
                 if (h != null) h(_focus);
                 e.Handled = true;
@@ -260,7 +257,8 @@ namespace SalvaOPM
         private int _shown = -1, _shownCount, _from = -1;   // _from: the item the motion started from (-1: none)
         private RectangleF _fromRect;                     // the switch pill where it was when the motion started
         private int _since;
-        private bool _mouseChose;
+        private int _keyAt;        // when the keyboard last chose (Environment.TickCount); its change is shown at once
+        private bool _keyChose;
         private readonly Timer _anim = new Timer();
 
         private int MotionMs { get { return Icons != null ? Th.FadeMs : Th.SlideMs; } }
@@ -278,8 +276,9 @@ namespace SalvaOPM
 
         private void Track()
         {
-            if (Index == _shown && Items.Length == _shownCount) { _mouseChose = false; return; }
-            if (_mouseChose && _shown >= 0 && Items.Length == _shownCount && Th.Motion)
+            if (Index == _shown && Items.Length == _shownCount) return;   // nothing changed (also the repaints WMI calls cause mid-apply)
+            bool byKey = _keyChose && Environment.TickCount - _keyAt < 5000;
+            if (!byKey && _shown >= 0 && Items.Length == _shownCount && Th.Motion)
             {
                 _fromRect = Presented();   // from the current on-screen place, so a second click mid-way does not jump
                 _from = _shown;
@@ -289,7 +288,7 @@ namespace SalvaOPM
             else { _from = -1; _anim.Stop(); }
             _shown = Index;
             _shownCount = Items.Length;
-            _mouseChose = false;
+            _keyChose = false;
         }
 
         private void EndMotionIfDone()
@@ -320,7 +319,6 @@ namespace SalvaOPM
         {
             RectangleF frame = new RectangleF(0, 0, Width - 1, Height - 1);
             Th.Fill(g, Th.Sunken, frame, Th.D(Th.RSurface));
-            Th.TopEdge(g, frame, Th.D(Th.RSurface));
             for (int i = 0; i < Items.Length; i++)
             {
                 if (i == Index || IsDisabled(i)) continue;
@@ -348,7 +346,6 @@ namespace SalvaOPM
                 RectangleF r = IsPressed(i) ? Inset(Cell(i), Th.D(2)) : Cell(i);
                 Color baseFill = IsPressed(i) ? Pressed : i == _hover && !off && !on ? Th.Hover : Th.Sunken;
                 Th.Fill(g, Th.Mix(baseFill, Selected, a), r, Th.D(Th.RSurface));
-                Th.TopEdge(g, r, Th.D(Th.RSurface));
                 if (a > 0)
                     using (Pen b = new Pen(Color.FromArgb((int)(255 * a), off ? Th.Off : Th.Accent), Th.D(2)))
                     using (GraphicsPath p = Th.Round(new RectangleF(r.X + 1, r.Y + 1, r.Width - 2, r.Height - 2), Th.D(Th.RSurface)))
@@ -392,7 +389,6 @@ namespace SalvaOPM
             Invalidate();
             if (commit)
             {
-                _mouseChose = true;
                 Action<int> h = Picked;
                 if (h != null) h(i);
             }
@@ -418,19 +414,65 @@ namespace SalvaOPM
         public int MaxRpm = HpBios.FanMax * 100;
         public double[] History = new double[0];
         public int HistoryCapacity = 60;
-        public string HistoryLabel = "";
         public int SecondsPerPoint = 5;
         public string GapText = "--";          // shown when hovering a gap ("asleep" for the GPU)
         private const double GraphMin = 30, GraphMax = 100;
         private int _hover = -1;               // history index under the mouse
 
+        private static string Duration(int s) { return s < 60 ? s + " s" : s / 60 + " min" + (s % 60 == 0 ? "" : " " + s % 60 + " s"); }
+
         /// <summary>"now", "35 s ago", "3 min 20 s ago": the age of point index of count.</summary>
         public static string AgeText(int index, int count, int secondsPerPoint)
         {
             int s = (count - 1 - index) * secondsPerPoint;
-            if (s <= 0) return "now";
-            if (s < 60) return s + " s ago";
-            return s / 60 + " min" + (s % 60 == 0 ? "" : " " + s % 60 + " s") + " ago";
+            return s <= 0 ? "now" : Duration(s) + " ago";
+        }
+
+        /// <summary>The time a graph spans: "40 s" while it fills up, the full "5 min" once it holds capacity points.</summary>
+        public static string SpanText(int count, int capacity, int secondsPerPoint)
+        {
+            return Duration((count >= capacity ? capacity : count - 1) * secondsPerPoint);
+        }
+
+        // the ring glides to each new reading (the number shows it at once)
+        private const int RingMs = 600;
+        private double _ringFrom, _ringTo = -1;
+        private int _ringSince;
+        private bool _gliding;
+        private readonly Timer _ringTimer = new Timer();
+
+        public ChipPanel()
+        {
+            _ringTimer.Interval = 15;
+            _ringTimer.Tick += delegate { Invalidate(); };
+        }
+
+        private double RingValue()
+        {
+            if (_ringTo < 0) return 0;
+            if (!_gliding) return _ringTo;
+            return _ringFrom + (_ringTo - _ringFrom) * Th.EaseInOut((Environment.TickCount - _ringSince) / (double)RingMs);
+        }
+
+        private void GlideTo(double target)
+        {
+            if (target == _ringTo)
+            {
+                if (_gliding && Environment.TickCount - _ringSince >= RingMs) { _gliding = false; _ringTimer.Stop(); }
+                return;
+            }
+            if (_ringTo < 0 || !Th.Motion) { _ringTo = target; _gliding = false; _ringTimer.Stop(); return; }   // first reading, or animations off
+            _ringFrom = RingValue();   // from where it is drawn now, so a reading mid-glide does not jump
+            _ringTo = target;
+            _ringSince = Environment.TickCount;
+            _gliding = true;
+            _ringTimer.Start();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) _ringTimer.Dispose();
+            base.Dispose(disposing);
         }
 
         private void Graph(out float x0, out float x1, out float y0, out float y1)
@@ -438,7 +480,8 @@ namespace SalvaOPM
             x0 = Th.D(140); x1 = Width - Th.D(16); y0 = Th.D(66); y1 = Height - Th.D(32);
         }
 
-        private float Step(float x0, float x1) { return (x1 - x0) / Math.Max(1, HistoryCapacity - 1); }
+        /// <summary>Point spacing: the readings so far spread over the full width until it holds capacity points.</summary>
+        private float Step(float x0, float x1) { return (x1 - x0) / Math.Max(1, Math.Min(History.Length, HistoryCapacity) - 1); }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
@@ -467,11 +510,13 @@ namespace SalvaOPM
             float cx = Th.D(72), cy = Th.D(124), rad = Th.D(46), w = Th.D(9);
             RectangleF ring = new RectangleF(cx - rad, cy - rad, 2 * rad, 2 * rad);
             using (Pen bg = new Pen(Th.GridH, w)) g.DrawEllipse(bg, ring);
-            if (Rpm > 0)
+            GlideTo(Rpm > 0 ? Math.Min(Rpm, MaxRpm) : 0);
+            double shown = RingValue();
+            if (shown > 0)
                 using (Pen fg = new Pen(Th.Accent, w))
                 {
                     fg.StartCap = fg.EndCap = LineCap.Round;
-                    g.DrawArc(fg, ring, -90, 360f * Math.Min(Rpm, MaxRpm) / MaxRpm);
+                    g.DrawArc(fg, ring, -90, (float)(360 * shown / MaxRpm));
                 }
             // centred by the renderer itself: measured widths of the semibold font leave it off-centre
             int box = (int)(2 * rad);
@@ -487,7 +532,7 @@ namespace SalvaOPM
                     float gy = Gy(v, y0, y1);
                     g.DrawLine(gv, x0, gy, x1, gy);
                 }
-            Th.Text(g, HistoryLabel, Th.Small, Th.Axis, (int)x0, (int)y1 + Th.D(6));
+            if (History.Length >= 2) Th.Text(g, SpanText(History.Length, HistoryCapacity, SecondsPerPoint), Th.Small, Th.Axis, (int)x0, (int)y1 + Th.D(6));
             Th.TextRight(g, "now", Th.Small, Th.Axis, (int)x1, (int)y1 + Th.D(6));
             float step = Step(x0, x1);
             int n = History.Length, start = 0;
@@ -590,7 +635,7 @@ namespace SalvaOPM
 
         private float Top0 { get { return Th.D(24); } }
         private float PlotH { get { return Height - Top0 - Th.D(30); } }
-        private float X0 { get { return Th.D(34); } }
+        private float X0 { get { return Th.D(40); } }
         private float X1 { get { return Width - Th.D(10); } }
         private float X(double t) { return X0 + (float)((t - Temps[0]) / (Temps[Temps.Length - 1] - Temps[0])) * (X1 - X0); }
         private float Y(double lvl) { return Top0 + PlotH * (float)(1 - lvl / Ceiling); }
@@ -611,7 +656,9 @@ namespace SalvaOPM
                 {
                     float y = (float)Math.Round(Y(Ceiling * pct / 100.0)) + 0.5f;
                     g.DrawLine(gh, X0, y, X1, y);
-                    Th.TextRight(g, pct.ToString(), Th.Small, Th.Axis, (int)X0 - Th.D(6), (int)y - Th.D(8));
+                    // centred on its gridline by the renderer (a fixed offset drifts with the DPI)
+                    TextRenderer.DrawText(g, pct.ToString(), Th.Small, new Rectangle(0, (int)y - Th.D(10), (int)X0 - Th.D(8), Th.D(20)), Th.Axis,
+                        TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine | TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
                 }
             using (Pen gv = new Pen(Th.GridV, 1))
                 for (int i = 0; i < Temps.Length; i++)
@@ -621,7 +668,7 @@ namespace SalvaOPM
                     string s = Temps[i] + "°";
                     int w = Th.Measure(s, Th.Small).Width;
                     int tx = i == 0 ? (int)X0 : i == Temps.Length - 1 ? (int)X1 - w : (int)x - w / 2;
-                    Th.Text(g, s, Th.Small, Th.Axis, tx, (int)(Top0 + PlotH + Th.D(8)));
+                    Th.Text(g, s, Th.Small, Th.Axis, tx, (int)(Top0 + PlotH + Th.D(10)));
                 }
             PointF[] pts = new PointF[Temps.Length];
             for (int i = 0; i < Temps.Length; i++) pts[i] = new PointF(X(Temps[i]), Y(Levels[i]));

@@ -103,7 +103,6 @@ namespace SalvaOPM
             _modes.SetBounds(Th.D(20), Th.D(76), Th.D(720), Th.D(84));
             _cpu.Title = "CPU";
             _gpu.Title = "GPU";
-            _cpu.HistoryLabel = _gpu.HistoryLabel = (app.CpuHistory.Capacity * Engine.TickMs / 60000) + " min";
             _cpu.HistoryCapacity = app.CpuHistory.Capacity;
             _gpu.HistoryCapacity = app.GpuHistory.Capacity;
             _cpu.SecondsPerPoint = _gpu.SecondsPerPoint = (int)(Engine.TickMs / 1000);

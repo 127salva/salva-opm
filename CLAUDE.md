@@ -4,7 +4,7 @@ A Windows tray app that replaces OMEN Gaming Hub's performance control on one la
 
 ## Where it stands (2.4.8, 2026-11-18)
 - Feature-complete for its owner. Every check in `docs/user-tests.md` (H1–H7) passed on the laptop; H8 (a fresh Windows install) is not done yet: planned for the owner's next clean Windows install. H9 (the Firmware fan choice of 2.5.0) passed on 2026-11-18.
-- `build.cmd`: 200 self-checks, 0 failures.
+- `build.cmd`: 202 self-checks, 0 failures.
 - The table "Every feature: how it is checked" in `docs/testing.md` shows, for each feature, whether it was seen on the laptop, only in the simulator, or never.
 - Releases: GitHub releases of `127salva/salva-opm`; the first public one was v2.4.3; each release has a tag `vX.Y.Z` and its SHA-256 in the release notes. If the tag of the version in `src/Setup.cs` is missing, that version has not been published yet.
 - Open points, none blocking:

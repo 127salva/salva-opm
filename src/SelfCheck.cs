@@ -849,6 +849,12 @@ namespace SalvaOPM
             for (int k = 1; k <= 20; k++) if (Th.EaseOut(k / 20.0) < Th.EaseOut((k - 1) / 20.0)) rising = false;
             Check(Th.EaseOut(0) == 0 && Th.EaseOut(1) == 1 && Th.EaseOut(-1) == 0 && Th.EaseOut(2) == 1 && Th.EaseOut(0.5) > 0.9 && rising,
                 "window motion: a strong ease-out from 0 to 1 (most of the way at half time), clamped, never going back");
+            bool both = true;
+            for (int k = 1; k <= 20; k++) if (Th.EaseInOut(k / 20.0) < Th.EaseInOut((k - 1) / 20.0)) both = false;
+            Check(Th.EaseInOut(0) == 0 && Th.EaseInOut(1) == 1 && Math.Abs(Th.EaseInOut(0.5) - 0.5) < 1e-9 && Th.EaseInOut(0.1) < 0.1 && both,
+                "ring glide: an ease-in-out from 0 to 1, slow at both ends, half way at half time");
+            Check(ChipPanel.SpanText(9, 60, 5) == "40 s" && ChipPanel.SpanText(27, 60, 5) == "2 min 10 s" && ChipPanel.SpanText(60, 60, 5) == "5 min",
+                "graph: the span shown under a graph that is still filling up");
         }
     }
 }
