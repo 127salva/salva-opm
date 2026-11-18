@@ -23,7 +23,7 @@ namespace SalvaOPM
     }
 
     /// <summary>The allow-list: exactly the command/type pairs this app sends, with their exact input and output sizes
-    /// (docs/hardware/evidence.md sections 0, 8 and 11).</summary>
+    /// (docs/hardware/evidence.md: decoded in section 2, second sources in 11, run on the laptop in 0 and 12).</summary>
     public static class FirmwareRules
     {
         public const int Omen = 0x20008;   // OMEN BIOS command

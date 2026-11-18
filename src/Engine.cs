@@ -13,7 +13,8 @@ namespace SalvaOPM
     ///  every 10 s: thermal guard (fans + ambient sensor); every 45 s: heartbeat re-sends profile and Performance power, ends OGH.
     /// Modes: Eco and Balanced = profile 0x30 + GPU Base / Boost (Ohman presets); Performance = profile 0x04, PL1/PL2 80,
     /// concurrent TDP 82 (verified on this laptop) + GPU Max. Fans: one quiet Auto curve for every mode, plus one custom curve
-    /// that only Performance can use. The firmware drives the fans on battery and whenever the CPU temperature is unknown.
+    /// that only Performance can use. The firmware drives the fans on battery, without a CPU temperature, while an old power
+    /// limit lapses and after fan control was lost; the thermal guard takes them back from it while engaged (FansByBios).
     /// An unexpected error stops all writes for the session (FailSafe).
     /// MonitorOnly (wrong laptop): reads only, never a write.
     /// All calls happen on the caller's thread; 'now' is milliseconds from the caller's clock.
