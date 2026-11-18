@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 127salva
 
 using System;
@@ -67,6 +67,8 @@ namespace SalvaOPM
             for (int i = 0; i < a.Length; i++) if (a[i] != b[i]) return false;
             return true;
         }
+
+        private static bool AllAuto(Settings s) { foreach (FanSource f in s.Fan) if (f != FanSource.Auto) return false; return true; }
 
         private static int Find(List<string> log, string needle, int from)
         {
@@ -495,11 +497,11 @@ namespace SalvaOPM
             r = new Rig(); r.Core.Boot(true, 0);
             r.Sens.Cpu = 85;
             now = RunFor(r, 0, 5000);                     // the engine reads temperatures on its 5 s tick
-            r.Core.SetFanMode(true, now);
-            Check(!r.Core.CustomFans && !r.St.PerfCustom && r.Sim.HeldCpu != 34, "Balanced has no Custom: the request is ignored");
+            r.Core.SetFanMode(FanSource.Custom, now);
+            Check(!r.Core.CustomFans && r.Core.FanChoice == FanSource.Auto && r.Sim.HeldCpu != 34, "Balanced has no Custom: the request is ignored");
             r.Core.Select(Mode.Performance, now);
             Check(!r.Core.CustomFans && r.Sim.HeldCpu == 42, "Performance starts on Auto");
-            r.Core.SetFanMode(true, now);
+            r.Core.SetFanMode(FanSource.Custom, now);
             Check(r.Core.CustomFans && r.Sim.HeldCpu == 34 && r.Sim.HeldGpu == 24, "Custom in Performance: CPU fan 34 from 85 C, GPU fan 24 from 45 C");
             r.Core.Select(Mode.Balanced, now);
             now = RunFor(r, now, Engine.LapseMs);   // the lapse after Performance, then the app's curve
@@ -515,11 +517,37 @@ namespace SalvaOPM
                 "OGH's lower bound holds: from 75 C up a point below 2900 rpm is refused, the bound itself is accepted");
             r.Core.SetCurve(new int[] { 30, 30, 30, 30, 30, 40, 40 }, now);
             Rig again = new Rig(new SimFirmware(), r.Dir);
-            Check(again.St.PerfCustom && Same(again.St.Curve, new int[] { 30, 30, 30, 30, 30, 40, 40 }), "the choice and the custom curve survive a restart");
+            Check(again.St.Fan[(int)Mode.Performance] == FanSource.Custom && Same(again.St.Curve, new int[] { 30, 30, 30, 30, 30, 40, 40 }), "the choice and the custom curve survive a restart");
             again.Sens.Cpu = 85; again.Core.Boot(true, 0);
             Check(again.Sim.HeldCpu == 42, "after a restart Balanced is on Auto");
             again.Core.Select(Mode.Performance, 0);
             Check(again.Sim.HeldCpu == 40, "and Performance comes back on the custom curve");
+
+            // ---- Firmware as the fan choice, remembered per mode; the firmware alone has the fans
+            r = new Rig(); r.Core.Boot(true, 0);
+            r.Core.SetFanMode(FanSource.Firmware, 0);
+            mark = r.Sim.Log.Count;
+            now = RunFor(r, 0, 120000);
+            Check(r.Core.FirmwareFans && r.Sim.FansByBios && Count(r.Sim.Log, "type 46", mark) == 0 && Count(r.Sim.Log, "type 16", mark) == 0
+                && Count(r.Sim.Log, "type 26 in FF-30-01-00", mark) >= 2, "Balanced on Firmware: profile sent with fans by BIOS, no fan writes for 2 minutes");
+            r.Core.Select(Mode.Eco, now);
+            Check(!r.Core.FirmwareFans && !r.Sim.FansByBios && r.Sim.HeldCpu > 0, "Eco keeps its own choice (Auto): the app's fans");
+            r.Core.Select(Mode.Balanced, now);
+            Check(r.Core.FirmwareFans && r.Sim.FansByBios, "back to Balanced: Firmware again");
+            again = new Rig(new SimFirmware(), r.Dir); again.Core.Boot(true, 0);
+            Check(again.Core.FirmwareFans && again.Sim.FansByBios && Count(again.Sim.Log, "type 46", 0) == 0, "the per-mode fan choice survives a restart");
+
+            r = new Rig(); r.Core.Boot(true, 0); r.Core.SetFanMode(FanSource.Firmware, 0);
+            r.Sens.Cpu = 96; mark = r.Sim.Log.Count;
+            RunFor(r, 0, 60000);
+            Check(!r.Core.Guard.Active && r.Sim.FansByBios && Count(r.Sim.Log, "type 46", mark) == 0 && r.Core.Fault == null,
+                "Firmware chosen: the firmware alone has the fans, no thermal guard even at 96 C");
+
+            r = new Rig(); r.Core.Boot(true, 0); r.Core.Select(Mode.Performance, 0); r.Core.SetFanMode(FanSource.Firmware, 0);
+            mark = r.Sim.Log.Count;
+            RunFor(r, 0, 600000);
+            Check(r.Core.InPerformance && !r.Core.Failed && r.Sim.HostPl1 == 80 && r.Sim.Tdp == 82 && r.Sim.Profile == 0x04 && r.Sim.FansByBios
+                && Count(r.Sim.Log, "type 46", mark) == 0, "Performance on Firmware: PL 80/80 and TDP 82 held for 10 minutes by the heartbeat, fans by BIOS");
 
             // ---- the BIOS does not answer for a moment (e.g. right after sleep)
             r = new Rig(); r.Core.Boot(true, 0); now = RunFor(r, 0, 10000);
@@ -571,7 +599,7 @@ namespace SalvaOPM
             Check(Writes(r.Sim.Log, 0) == 0 && r.Sim.FansByBios && r.Core.Fans != null, "monitoring only: 10 min without a single write; fans are still read");
             Check(!r.Core.Select(Mode.Performance, 0) && r.Core.Failed && Writes(r.Sim.Log, 0) == 0 && r.Core.Fault.IndexOf("Monitoring only", StringComparison.Ordinal) >= 0,
                 "monitoring only: mode changes are refused with the reason");
-            r.Core.SetFanMode(true, 0); r.Unplug(0); r.Plug(0); r.Core.Resume(true, 0); r.Core.Exit(false);
+            r.Core.SetFanMode(FanSource.Firmware, 0); r.Unplug(0); r.Plug(0); r.Core.Resume(true, 0); r.Core.Exit(false);
             Check(Writes(r.Sim.Log, 0) == 0, "monitoring only: fan choice, power events, resume and exit write nothing either");
 
             // ---- fans not following
@@ -697,7 +725,7 @@ namespace SalvaOPM
             mark = r.Sim.Log.Count;
             now = RunFor(r, now, 600000);
             bool refused = !r.Core.Select(Mode.Eco, now);
-            r.Unplug(now); r.Plug(now); r.Core.Resume(true, now); r.Core.SetFanMode(true, now); r.Core.SetCurve(FanCurve.DefaultCustom, now); r.Core.Exit(false);
+            r.Unplug(now); r.Plug(now); r.Core.Resume(true, now); r.Core.SetFanMode(FanSource.Firmware, now); r.Core.SetCurve(FanCurve.DefaultCustom, now); r.Core.Exit(false);
             Check(refused && Writes(r.Sim.Log, mark) == 0 && r.Sim.HostPl1 == 0, "fail safe: 10 min and every later event without one write; the old limit lapsed");
         }
 
@@ -785,16 +813,16 @@ namespace SalvaOPM
         {
             string dir = NewDir();
             Settings s = Settings.Load(dir);
-            Check(s.SavedMode == Mode.Balanced && s.BaselineTdp == -1 && !s.PerfCustom && Same(s.Curve, FanCurve.DefaultCustom) && Settings.ValidCurve(FanCurve.DefaultCustom),
+            Check(s.SavedMode == Mode.Balanced && s.BaselineTdp == -1 && AllAuto(s) && Same(s.Curve, FanCurve.DefaultCustom) && Settings.ValidCurve(FanCurve.DefaultCustom),
                 "settings: defaults without a file (Performance on Auto, a valid default curve)");
-            s.SavedMode = Mode.Eco; s.BaselineTdp = 30; s.FactoryGpu = new byte[] { 0, 1, 0, 87 }; s.PerfCustom = true;
+            s.SavedMode = Mode.Eco; s.BaselineTdp = 30; s.FactoryGpu = new byte[] { 0, 1, 0, 87 }; s.Fan[(int)Mode.Performance] = FanSource.Custom; s.Fan[(int)Mode.Eco] = FanSource.Firmware;
             s.Curve = new int[] { 20, 22, 24, 30, 36, 42, 48 };
             Check(s.Save(), "settings: save");
             Settings t = Settings.Load(dir);
-            Check(t.SavedMode == Mode.Eco && t.BaselineTdp == 30 && Same(t.FactoryGpu, new byte[] { 0, 1, 0, 87 }) && t.PerfCustom && Same(t.Curve, s.Curve), "settings: round trip");
+            Check(t.SavedMode == Mode.Eco && t.BaselineTdp == 30 && Same(t.FactoryGpu, new byte[] { 0, 1, 0, 87 }) && t.Fan[(int)Mode.Performance] == FanSource.Custom && t.Fan[(int)Mode.Eco] == FanSource.Firmware && t.Fan[(int)Mode.Balanced] == FanSource.Auto && Same(t.Curve, s.Curve), "settings: round trip");
             File.WriteAllText(Path.Combine(dir, "state.txt"), "savedMode=Performance\r\nbaselineTdp=200\r\nfactoryGpu=00-01-00-FF\r\ncurve=20,19,20,20,20,20,20\r\nfanPerformance=maybe\r\nfanEco=custom\r\ntakeOver=0\r\n");
             t = Settings.Load(dir);
-            Check(t.SavedMode == Mode.Balanced && t.BaselineTdp == -1 && t.FactoryGpu == null && Same(t.Curve, FanCurve.DefaultCustom) && !t.PerfCustom,
+            Check(t.SavedMode == Mode.Balanced && t.BaselineTdp == -1 && t.FactoryGpu == null && Same(t.Curve, FanCurve.DefaultCustom) && AllAuto(t),
                 "settings: out-of-range, falling or unknown values are ignored");
             Check(Settings.ParseCurve("19,19,19,19,19,19,49") == null && Settings.ParseCurve("19,20,21") == null && Settings.ParseCurve("a,b,c,d,e,f,g") == null
                 && Settings.ParseCurve("18,20,21,29,30,31,32") == null && Settings.ParseCurve("19,20,21,29,30,31,48") != null, "curve parse: 7 rising levels inside 19..48");

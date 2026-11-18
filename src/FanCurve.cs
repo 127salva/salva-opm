@@ -138,6 +138,9 @@ namespace SalvaOPM
         private int _hotTicks, _warmTicks;
         private long _safeSince = -1;
 
+        /// <summary>Back to the idle state (the user handed the fans to the firmware while the guard was on).</summary>
+        public void Reset() { Active = false; Stalled = false; IgnoredTicks = 0; _hotTicks = 0; _warmTicks = 0; _safeSince = -1; }
+
         /// <summary>Returns true when Active changed.</summary>
         public bool Tick(double cpu, int chassis, int[] fans, long nowMs)
         {

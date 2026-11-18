@@ -444,6 +444,8 @@ namespace SalvaOPM
         public int[] Levels = (int[])FanCurve.DefaultCustom.Clone();
         public int Floor = HpBios.FanMin, Ceiling = HpBios.FanMax;
         public bool ReadOnly;
+        /// <summary>Shown instead of the curve (the firmware's own curve cannot be read); null draws the curve.</summary>
+        public string Message;
         public event Action<int[]> Committed;
         private int _drag = -1, _hover = -1;
 
@@ -466,6 +468,7 @@ namespace SalvaOPM
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Th.Bg);
             Th.Fill(g, Th.Sunken, new RectangleF(0, 0, Width - 1, Height - 1), Th.D(14));
+            if (Message != null) { Th.TextCenter(g, Message, Th.Seg, Th.Sub, new Rectangle(0, 0, Width, Height)); return; }
             using (Pen gh = new Pen(Th.GridH, 1))
                 foreach (int pct in new int[] { 100, 75, 50, 25, 0 })
                 {
@@ -520,7 +523,7 @@ namespace SalvaOPM
 
         private int HandleAt(Point p)
         {
-            if (ReadOnly) return -1;
+            if (ReadOnly || Message != null) return -1;
             for (int i = 0; i < Temps.Length; i++) if (Math.Abs(p.X - X(Temps[i])) <= Th.D(13) && Math.Abs(p.Y - Y(Levels[i])) <= Th.D(40)) return i;
             return -1;
         }
@@ -562,7 +565,7 @@ namespace SalvaOPM
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            if (!ReadOnly)
+            if (!ReadOnly && Message == null)
             {
                 if (e.KeyCode == Keys.Left || e.KeyCode == Keys.Right)
                 {

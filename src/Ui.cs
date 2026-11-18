@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 127salva
 // Portions adapted from Ohman (https://github.com/P4R1H/Ohman), GPL-3.0-or-later.
 
@@ -68,7 +68,9 @@ namespace SalvaOPM
     {
         [DllImport("dwmapi.dll")] private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
 
-        private static readonly string[] AutoOnly = { "Auto" }, AutoCustom = { "Auto", "Custom" };
+        // the fan switch: Auto | Firmware in Eco and Balanced, Auto | Custom | Firmware in Performance
+        private static readonly FanSource[] TwoWay = { FanSource.Auto, FanSource.Firmware }, ThreeWay = { FanSource.Auto, FanSource.Custom, FanSource.Firmware };
+        private FanSource[] _fanChoices = TwoWay;
 
         private readonly App _app;
         private readonly StatusPill _status = new StatusPill();
@@ -107,7 +109,7 @@ namespace SalvaOPM
             _gpu.GapText = "asleep";
             _cpu.SetBounds(Th.D(20), Th.D(176), Th.D(352), Th.D(200));
             _gpu.SetBounds(Th.D(388), Th.D(176), Th.D(352), Th.D(200));
-            _fan.Picked += delegate(int i) { E.SetFanMode(i == 1, _app.Now()); };
+            _fan.Picked += delegate(int i) { if (i < _fanChoices.Length) E.SetFanMode(_fanChoices[i], _app.Now()); };
             _fan.SetBounds(Th.D(20), Th.D(392), Th.D(720), Th.D(44));
             _curve.Committed += delegate(int[] levels) { E.SetCurve(levels, _app.Now()); };
             _curve.SetBounds(Th.D(20), Th.D(452), Th.D(720), Th.D(204));
@@ -148,9 +150,11 @@ namespace SalvaOPM
             _gpu.Rpm = f == null || f[1] < 0 ? -1 : f[1] * 100;
             _gpu.History = _app.GpuHistory.Values();
 
-            _fan.Items = perf ? AutoCustom : AutoOnly;
-            _fan.Index = E.CustomFans ? 1 : 0;
-            _fan.Disabled = new bool[] { mon, mon };
+            _fanChoices = perf ? ThreeWay : TwoWay;
+            _fan.Items = Array.ConvertAll(_fanChoices, delegate(FanSource c) { return c.ToString(); });
+            _fan.Index = Math.Max(0, Array.IndexOf(_fanChoices, E.FanChoice));
+            _fan.Disabled = Array.ConvertAll(_fanChoices, delegate(FanSource c) { return mon; });
+            _curve.Message = E.FirmwareFans ? "The firmware's own fan curve is in charge." : null;
             if (!_curve.Dragging)
             {
                 if (E.CustomFans)
@@ -169,7 +173,7 @@ namespace SalvaOPM
                     _curve.ReadOnly = true;
                 }
             }
-            _curve.TabStop = !_curve.ReadOnly;   // the Auto curve is shown, not edited
+            _curve.TabStop = !_curve.ReadOnly && _curve.Message == null;   // the Auto curve is shown, not edited
             foreach (Control c in Controls) c.Invalidate();
         }
 

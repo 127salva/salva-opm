@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 127salva
 // Portions adapted from Ohman (https://github.com/P4R1H/Ohman), GPL-3.0-or-later.
 
@@ -14,7 +14,8 @@ namespace SalvaOPM
     /// Modes: Eco and Balanced = profile 0x30 + GPU Base / Boost (Ohman presets); Performance = profile 0x04, PL1/PL2 80,
     /// concurrent TDP 82 (verified on this laptop) + GPU Max. Fans: one quiet Auto curve for every mode, plus one custom curve
     /// that only Performance can use. The firmware drives the fans on battery, without a CPU temperature, while an old power
-    /// limit lapses and after fan control was lost; the thermal guard takes them back from it while engaged (FansByBios).
+    /// limit lapses, after fan control was lost and when the user chose Firmware for the mode; the thermal guard takes them back
+    /// from it while engaged, except from a Firmware choice (FansByBios).
     /// An unexpected error stops all writes for the session (FailSafe).
     /// MonitorOnly (wrong laptop): reads only, never a write.
     /// All calls happen on the caller's thread; 'now' is milliseconds from the caller's clock.
@@ -81,12 +82,17 @@ namespace SalvaOPM
         public int[] Levels { get { return new int[] { _lvlCpu, _lvlGpu }; } }
         public FanCurve AutoCurve { get { return _auto; } }
         /// <summary>True while the custom curve drives the fans: only Performance can use it; Eco and Balanced are always Auto.</summary>
-        public bool CustomFans { get { return _ctl.Effective == Mode.Performance && _s.PerfCustom; } }
+        public bool CustomFans { get { return _ctl.Effective == Mode.Performance && FanChoice == FanSource.Custom; } }
+        /// <summary>The fan choice of the mode in effect (each mode remembers its own).</summary>
+        public FanSource FanChoice { get { return _s.Fan[(int)_ctl.Effective]; } }
+        /// <summary>The user chose Firmware for this mode: the firmware alone drives the fans, no thermal guard, no 85 C rule.</summary>
+        public bool FirmwareFans { get { return FanChoice == FanSource.Firmware; } }
         public FanCurve ActiveCurve { get { return CustomFans ? FanCurve.Custom(_s.Curve) : _auto; } }
         public bool CpuUnknown { get { return double.IsNaN(_smCpu); } }
         /// <summary>Who drives the fans. The firmware does on battery (Ohman FansByBios), without a CPU temperature, after
-        /// fan control was lost and in monitoring; the thermal guard takes them whenever it is engaged.</summary>
-        public bool FansByBios { get { return FanControlLost || MonitorOnly || ((!_onAc || CpuUnknown || Lapsing) && !Guard.Active); } }
+        /// fan control was lost, in monitoring and when the user chose Firmware; the thermal guard takes them whenever it is
+        /// engaged, except from a Firmware choice.</summary>
+        public bool FansByBios { get { return FanControlLost || MonitorOnly || FirmwareFans || ((!_onAc || CpuUnknown || Lapsing) && !Guard.Active); } }
         public bool FansFresh(long now) { return Fans != null && now - _fansAt <= FansStaleMs; }
 
         /// <summary>An extra fan-speed read for the open window (type 45; reads do not refresh the host state: lapses ended
@@ -268,7 +274,7 @@ namespace SalvaOPM
             _applyFailed = !SendProfile(profile);
             if (_applyFailed) { Fire(); return Fail("could not apply " + Name(target) + " (the BIOS did not answer)"); }
             _lvlCpu = _lvlGpu = -1;
-            if (Guard.Active) GuardFans(now);   // e.g. a resume while hot: the levels held before sleep are gone
+            if (Guard.Active && !FirmwareFans) GuardFans(now);   // e.g. a resume while hot: the levels held before sleep are gone
             else if (!FansByBios) FanTick(now, true);
             if (target == Mode.Performance && !EnterPerformance())
             {
@@ -542,6 +548,12 @@ namespace SalvaOPM
             if (f != null) { Fans = f; _fansAt = now; }
             Chassis = _bios.ReadSensor(ChassisSensor);
             if (MonitorOnly) { Fire(); return; }
+            if (FirmwareFans)   // the user chose the firmware alone: no guard, no fan watch (readings still shown)
+            {
+                if (Guard.Active) { Guard.Reset(); Log("thermal guard stood down: Firmware chosen"); }
+                Fire();
+                return;
+            }
             bool changed = Guard.Tick(_sensors.CpuTemp, Chassis, f, now);
             if (changed && Guard.Active)
             {
@@ -642,13 +654,18 @@ namespace SalvaOPM
 
         // ---------------- settings from the window ----------------
 
-        /// <summary>Auto or Custom for Performance (the only mode with a choice).</summary>
-        public void SetFanMode(bool custom, long now)
+        /// <summary>The fan choice of the mode in effect: Auto or Firmware in every mode, Custom only in Performance.
+        /// Handing the fans over (or back) sends the profile; during a lapse the firmware has them already and nothing is sent.</summary>
+        public void SetFanMode(FanSource source, long now)
         {
-            if (_ctl.Effective != Mode.Performance || Halted) return;
-            _s.PerfCustom = custom;
+            if (MonitorOnly || Halted) return;
+            if (source == FanSource.Custom && _ctl.Effective != Mode.Performance) return;
+            if (source == FanChoice) return;
+            _s.Fan[(int)_ctl.Effective] = source;
             _s.Save();
-            if (!FansByBios && !Guard.Active) FanTick(now, true);
+            Log(Name(_ctl.Effective) + " fans: " + source.ToString().ToLowerInvariant());
+            if (FansByBios != _byBiosSent) OwnerChanged(now);
+            else if (!FansByBios && !Guard.Active) FanTick(now, true);
             Fire();
         }
 

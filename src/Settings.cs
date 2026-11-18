@@ -7,13 +7,17 @@ using System.Text;
 
 namespace SalvaOPM
 {
+    /// <summary>Who drives the fans in a mode: the app's Auto curve, the custom curve (Performance only), or the firmware.</summary>
+    public enum FanSource { Auto, Custom, Firmware }
+
     /// <summary>
     /// Everything the app keeps on disk: %ProgramData%\SalvaOPM\state.txt (key=value lines), validated on load,
     /// written atomically (temp file, then replace).
     ///  savedMode       Eco or Balanced (Performance is saved as Balanced)
     ///  baselineTdp     concurrent TDP read before the first Performance write, restored when leaving Performance
     ///  factoryGpu      GPU record read before the app's first GPU write, put back by uninstall
-    ///  fanPerformance  auto | custom: which curve Performance uses (Eco and Balanced always use Auto)
+    ///  fanEco, fanBalanced   auto | firmware: who drives the fans in that mode
+    ///  fanPerformance  auto | custom | firmware
     ///  curve           the one custom curve: seven levels at 60..90 C
     /// </summary>
     public sealed class Settings
@@ -21,7 +25,9 @@ namespace SalvaOPM
         public Mode SavedMode = Mode.Balanced;
         public int BaselineTdp = -1;
         public byte[] FactoryGpu;
-        public bool PerfCustom;
+        /// <summary>The fan choice of each mode, indexed by (int)Mode.</summary>
+        public FanSource[] Fan = new FanSource[3];
+        private static readonly string[] FanKeys = { "fanEco", "fanBalanced", "fanPerformance" };
         public int[] Curve = (int[])FanCurve.DefaultCustom.Clone();
 
         private readonly string _path;
@@ -49,7 +55,11 @@ namespace SalvaOPM
                     if (key == "savedMode") s.SavedMode = val == "Eco" ? Mode.Eco : Mode.Balanced;
                     else if (key == "baselineTdp") { if (int.TryParse(val, out v) && v >= HpBios.TdpMin && v <= HpBios.TdpMax) s.BaselineTdp = v; }
                     else if (key == "factoryGpu") s.FactoryGpu = ParseRecord(val);
-                    else if (key == "fanPerformance") s.PerfCustom = val == "custom";
+                    else if (Array.IndexOf(FanKeys, key) >= 0)
+                    {
+                        int m = Array.IndexOf(FanKeys, key);
+                        s.Fan[m] = val == "firmware" ? FanSource.Firmware : val == "custom" && m == (int)Mode.Performance ? FanSource.Custom : FanSource.Auto;
+                    }
                     else if (key == "curve") { int[] c = ParseCurve(val); if (c != null) s.Curve = c; }
                 }
             }
@@ -103,7 +113,7 @@ namespace SalvaOPM
                 sb.Append("savedMode=").Append(SavedMode == Mode.Eco ? "Eco" : "Balanced").Append("\r\n");
                 if (BaselineTdp >= 0) sb.Append("baselineTdp=").Append(BaselineTdp).Append("\r\n");
                 if (FactoryGpu != null) sb.Append("factoryGpu=").Append(BitConverter.ToString(FactoryGpu)).Append("\r\n");
-                sb.Append("fanPerformance=").Append(PerfCustom ? "custom" : "auto").Append("\r\n");
+                for (int m = 0; m < FanKeys.Length; m++) sb.Append(FanKeys[m]).Append('=').Append(Fan[m].ToString().ToLowerInvariant()).Append("\r\n");
                 sb.Append("curve=").Append(string.Join(",", Array.ConvertAll(Curve, delegate(int x) { return x.ToString(); }))).Append("\r\n");
                 string tmp = _path + ".tmp";
                 File.WriteAllText(tmp, sb.ToString(), Encoding.ASCII);

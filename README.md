@@ -8,7 +8,7 @@ A small Windows app that replaces OMEN Gaming Hub's performance control on one l
 
 ## What it does
 - Three modes: Eco, Balanced and Performance. Performance is HP's "Unleashed" (80 W CPU limits, GPU at maximum power) and needs the charger.
-- A quiet automatic fan curve in every mode while on the charger (on battery the firmware drives the fans, unless the thermal guard has to step in), and a custom 7-point curve in Performance.
+- A quiet automatic fan curve in every mode while on the charger (on battery the firmware drives the fans, unless the thermal guard has to step in), a custom 7-point curve in Performance, and in any mode the choice to leave the fans to the firmware.
 - A thermal guard, an 85 °C rule, and battery-drain and chassis-temperature rules. When something is off, the firmware gets control back.
 - Unplugging switches to Eco and plugging back in switches to Balanced (a manually chosen Eco stays Eco). Performance never survives a restart.
 - One file, `SalvaOPM-Setup.exe`, installs, updates and uninstalls. The app never uses the network; the setup uses it once, to download PawnIO when it is missing or older than 2.2.0.
