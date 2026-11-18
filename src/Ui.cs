@@ -62,8 +62,8 @@ namespace SalvaOPM
     }
 
     /// <summary>The whole window, one page: a header (logo, name, version, a status pill with any warning); the three
-    /// modes as cards; a CPU and a GPU panel (temperature, fan speed, the last 5 minutes); the fan switch (Auto alone in Eco
-    /// and Balanced, Auto | Custom in Performance); and the curve.</summary>
+    /// modes as cards; a CPU and a GPU panel (temperature, fan speed, the last 5 minutes); the fan switch (Firmware | Recommended,
+    /// plus Custom in Performance); and the curve, or a note when the firmware has the fans.</summary>
     public sealed class MainForm : Form
     {
         [DllImport("dwmapi.dll")] private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
