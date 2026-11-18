@@ -45,7 +45,20 @@ namespace SalvaOPM
         public const double RSmall = 6, RCell = 10, RSurface = 14;
         /// <summary>Motion: the switch pill's slide and the cards' cross-fade (mouse only; skipped when Windows animations are off).</summary>
         public const int SlideMs = 180, FadeMs = 150;
-        public static bool Motion { get { return SystemInformation.UIEffectsEnabled; } }
+        public static bool Motion
+        {
+            get
+            {
+                // Windows 11 "Animation effects" (Accessibility > Visual effects) is SPI_GETCLIENTAREAANIMATION, the same
+                // setting browsers use for reduced motion; the older UIEffectsEnabled stays on when it is turned off
+                bool on;
+                try { return !SystemParametersInfo(0x1042, 0, out on, 0) || on; }
+                catch (Exception) { return true; }
+            }
+        }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SystemParametersInfo(int action, int param, out bool value, int winIni);
 
         /// <summary>A strong ease-out (quartic): fast at first, settles softly; t is clamped to 0..1.</summary>
         public static double EaseOut(double t)
