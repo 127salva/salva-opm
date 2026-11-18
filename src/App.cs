@@ -185,7 +185,11 @@ namespace SalvaOPM
 
         public void Choose(Mode m)
         {
-            if (!_booted) return;   // the identity is not known yet: nothing may be written
+            if (!_booted)   // the identity is not known yet: nothing may be written
+            {
+                _tray.ShowBalloonTip(3000, "Salva OPM", "Starting up; try again in a moment.", ToolTipIcon.Info);
+                return;
+            }
             long now = Now();
             if (now - _lastChoose < 1000) return;   // no rapid profile toggling
             _lastChoose = now;

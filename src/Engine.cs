@@ -291,7 +291,11 @@ namespace SalvaOPM
             if (p == null) return Fail("could not read power data");
             // baseline = concurrent TDP before the first Performance write; never overwrite it with a left-over 82, and keep
             // only a value HpBios.WriteTdp accepts (anything else would throw when leaving Performance)
-            if (p.Tdp != PerfTdp && p.Tdp != _s.BaselineTdp && p.Tdp >= HpBios.TdpMin && p.Tdp <= HpBios.TdpMax) { _s.BaselineTdp = p.Tdp; _s.Save(); }
+            if (p.Tdp != PerfTdp && p.Tdp != _s.BaselineTdp)
+            {
+                if (p.Tdp >= HpBios.TdpMin && p.Tdp <= HpBios.TdpMax) { _s.BaselineTdp = p.Tdp; _s.Save(); }
+                else Log("concurrent TDP " + p.Tdp + " is outside 20..82: not kept as the baseline");
+            }
             if (!_bios.WritePowerLimits(PerfPl)) return Fail("PL1/PL2 write failed");
             if (!_bios.WriteTdp(PerfTdp)) return Fail("concurrent TDP write failed");
             PowerData v = _bios.ReadPower();
