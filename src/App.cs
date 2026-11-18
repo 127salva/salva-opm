@@ -167,6 +167,7 @@ namespace SalvaOPM
             {
                 _log.Write("unhandled on the hardware thread: " + e);
                 Engine.FailSafe(e.GetType().Name + ": " + e.Message);
+                OnUi(delegate { PendingMode = null; PendingFan = null; Refresh(); });   // the failed job never cleared its clicked choice
             });
 
             _tray.Icon = AppIcon;
@@ -299,13 +300,17 @@ namespace SalvaOPM
             });
         }
 
+        /// <summary>False (with a balloon) until start-up is done: the identity is not known yet, so nothing may be written.</summary>
+        private bool ReadyForChoices()
+        {
+            if (_booted) return true;
+            _tray.ShowBalloonTip(3000, "Salva OPM", "Starting up; try again in a moment.", ToolTipIcon.Info);
+            return false;
+        }
+
         public void Choose(Mode m)
         {
-            if (!_booted)   // the identity is not known yet: nothing may be written
-            {
-                _tray.ShowBalloonTip(3000, "Salva OPM", "Starting up; try again in a moment.", ToolTipIcon.Info);
-                return;
-            }
+            if (!ReadyForChoices()) return;
             // shown at once; applied on the hardware thread, where fast clicks collapse into the last one
             PendingMode = m;
             Refresh();
@@ -325,6 +330,7 @@ namespace SalvaOPM
         /// mode, even when a mode change is still waiting in front of it.</summary>
         public void ChooseFan(Mode m, FanSource f)
         {
+            if (!ReadyForChoices()) return;
             PendingFan = f;
             PendingFanMode = m;
             Refresh();
@@ -335,7 +341,11 @@ namespace SalvaOPM
             });
         }
 
-        public void SetCurve(int[] levels) { Hw.Post("curve", delegate { Engine.SetCurve(levels, Now()); }); }
+        public void SetCurve(int[] levels)
+        {
+            if (!ReadyForChoices()) return;
+            Hw.Post("curve", delegate { Engine.SetCurve(levels, Now()); });
+        }
 
         /// <summary>The open window reads the fan speeds every 2 s.</summary>
         public void ReadFans() { Hw.Post("fans", delegate { Engine.ReadFans(Now()); OnUi(Refresh); }); }
