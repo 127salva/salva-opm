@@ -46,13 +46,18 @@ namespace SalvaOPM
         /// itself), so the file alone said "installed" if the setup was reopened at once.</summary>
         public static bool IsInstalled()
         {
-            if (!File.Exists(InstalledExe)) return false;
+            return File.Exists(InstalledExe) && UninstallEntryExists();
+        }
+
+        /// <summary>The Apps entry (written at install, removed by uninstall); true when it cannot be read.</summary>
+        private static bool UninstallEntryExists()
+        {
             try
             {
                 using (RegistryKey k = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(UninstallKey))
                     return k != null;
             }
-            catch (Exception) { return true; }   // cannot tell: the file decides, as before
+            catch (Exception) { return true; }
         }
 
         private static int Elevate(string arg)
@@ -129,6 +134,13 @@ namespace SalvaOPM
             try
             {
                 StopRunning();
+                // an uninstall that just ran deletes this folder ~6 s after it ended: let it finish, or it removes the new copy
+                if (Directory.Exists(InstallDir) && !UninstallEntryExists() && !RunningInstalled())
+                {
+                    int waited = 0;
+                    while (Directory.Exists(InstallDir) && waited < 10000) { Thread.Sleep(500); waited += 500; }
+                    log.Write("install: waited " + waited / 1000.0 + " s for the previous uninstall to remove the old folder");
+                }
                 Directory.CreateDirectory(InstallDir);
                 if (!RunningInstalled()) CopyWithRetry(Application.ExecutablePath, InstalledExe);
                 bool ours = PawnIoIsOurs();
