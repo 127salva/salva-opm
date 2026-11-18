@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 127salva
 
 using System;
@@ -9,6 +9,12 @@ namespace SalvaOPM
 {
     /// <summary>Who drives the fans in a mode: the app's Auto curve, the custom curve (Performance only), or the firmware.</summary>
     public enum FanSource { Auto, Custom, Firmware }
+
+    /// <summary>What the window and the log call each fan choice (Auto is shown as "Recommended"; settings keep "auto").</summary>
+    public static class FanLabels
+    {
+        public static string Of(FanSource f) { return f == FanSource.Auto ? "Recommended" : f.ToString(); }
+    }
 
     /// <summary>
     /// Everything the app keeps on disk: %ProgramData%\SalvaOPM\state.txt (key=value lines), validated on load,

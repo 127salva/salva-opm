@@ -663,7 +663,7 @@ namespace SalvaOPM
             if (source == FanChoice) return;
             _s.Fan[(int)_ctl.Effective] = source;
             _s.Save();
-            Log(Name(_ctl.Effective) + " fans: " + source.ToString().ToLowerInvariant());
+            Log(Name(_ctl.Effective) + " fans: " + FanLabels.Of(source).ToLowerInvariant());
             if (FansByBios != _byBiosSent) OwnerChanged(now);
             else if (!FansByBios && !Guard.Active) FanTick(now, true);
             Fire();

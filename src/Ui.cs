@@ -68,7 +68,7 @@ namespace SalvaOPM
     {
         [DllImport("dwmapi.dll")] private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
 
-        // the fan switch: Firmware | Auto in Eco and Balanced, Firmware | Auto | Custom in Performance
+        // the fan switch: Firmware | Recommended in Eco and Balanced, Firmware | Recommended | Custom in Performance
         private static readonly FanSource[] TwoWay = { FanSource.Firmware, FanSource.Auto }, ThreeWay = { FanSource.Firmware, FanSource.Auto, FanSource.Custom };
         private FanSource[] _fanChoices = TwoWay;
 
@@ -151,7 +151,7 @@ namespace SalvaOPM
             _gpu.History = _app.GpuHistory.Values();
 
             _fanChoices = perf ? ThreeWay : TwoWay;
-            _fan.Items = Array.ConvertAll(_fanChoices, delegate(FanSource c) { return c.ToString(); });
+            _fan.Items = Array.ConvertAll(_fanChoices, delegate(FanSource c) { return FanLabels.Of(c); });
             _fan.Index = Math.Max(0, Array.IndexOf(_fanChoices, E.FanChoice));
             _fan.Disabled = Array.ConvertAll(_fanChoices, delegate(FanSource c) { return mon; });
             _curve.Message = E.FirmwareFans ? "The firmware's own fan curve is in charge." : null;
