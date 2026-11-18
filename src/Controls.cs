@@ -41,6 +41,16 @@ namespace SalvaOPM
             Big = new Font("Segoe UI Semibold", 22f);
         }
 
+        [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
+        /// <summary>Rounded window corners on Windows 11 (DWMWA_WINDOW_CORNER_PREFERENCE = DWMWCP_ROUND); ignored before.</summary>
+        public static void RoundCorners(IntPtr handle)
+        {
+            int round = 2;
+            try { DwmSetWindowAttribute(handle, 33, ref round, 4); } catch (Exception) { }
+        }
+
         /// <summary>The one radius scale (96 DPI units): small pills and inner focus rings, switch cells, every surface.</summary>
         public const double RSmall = 6, RCell = 10, RSurface = 14;
         /// <summary>Motion: the switch pill's slide and the cards' cross-fade (mouse only; skipped when Windows animations are off).</summary>
@@ -175,6 +185,38 @@ namespace SalvaOPM
         public static void Fill(Graphics g, Color c, RectangleF r, float rad)
         {
             using (GraphicsPath p = Round(r, rad)) using (SolidBrush b = new SolidBrush(c)) g.FillPath(b, p);
+        }
+    }
+
+    /// <summary>The tray menu: the window's dark background, a rounded highlight under the mouse, a thin separator.</summary>
+    public sealed class TrayMenuRenderer : ToolStripProfessionalRenderer
+    {
+        protected override void OnRenderToolStripBackground(ToolStripRenderEventArgs e) { e.Graphics.Clear(Th.Bg); }
+
+        protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
+        {
+            using (Pen p = new Pen(Th.GridH)) e.Graphics.DrawRectangle(p, 0, 0, e.ToolStrip.Width - 1, e.ToolStrip.Height - 1);
+        }
+
+        protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
+        {
+            if (!e.Item.Selected) return;
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            Th.Fill(e.Graphics, Th.PillBg, new RectangleF(Th.D(2), 1, e.Item.Width - Th.D(4), e.Item.Height - 2), Th.D(Th.RSmall));
+        }
+
+        protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
+        {
+            e.TextColor = e.Item.Selected ? Th.TextHi : Th.TextB;
+            e.TextRectangle = new Rectangle(Th.D(12), 0, e.Item.Width - Th.D(16), e.Item.Height);
+            e.TextFormat = TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine;
+            base.OnRenderItemText(e);
+        }
+
+        protected override void OnRenderSeparator(ToolStripSeparatorRenderEventArgs e)
+        {
+            int y = e.Item.Height / 2;
+            using (Pen p = new Pen(Th.GridH)) e.Graphics.DrawLine(p, Th.D(8), y, e.Item.Width - Th.D(8), y);
         }
     }
 

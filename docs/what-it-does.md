@@ -1,4 +1,4 @@
-# Salva OPM 2.5.1: what it does (and doesn't)
+# Salva OPM 2.5.2: what it does (and doesn't)
 
 Everything Salva OPM touches on the HP OMEN 16-ap0 with board 8E35. Source: `src/` (plain C#, built by `build.cmd` with Windows' own compiler). The one file to run is `dist\SalvaOPM-Setup.exe`. The app works offline; the setup needs internet once, only if PawnIO is missing or older than 2.2.0.
 
@@ -14,7 +14,7 @@ One page:
 - **Feel:** a click shows a pressed look at once and applies on release; the fan switch's red pill slides (180 ms) and the chosen card fades in (150 ms), also when the app changes the mode itself (unplugging). Not for keyboard choices, and not when Windows animations are off.
 - **Keyboard:** Tab moves between the mode cards, the fan switch and an editable curve (a white ring shows where); arrow keys pick, Enter or Space applies; on the curve Left/Right pick a point and Up/Down move it (Shift: the whole curve).
 
-Closing the window keeps the app in the tray. The tray diamond shows the mode (green Eco, grey Balanced, red Performance); hovering it shows temperatures and fan speeds, or the current warning when there is one. Right-click: Open, Exit (modes are chosen in the window). The OMEN key opens and hides the window.
+Closing the window keeps the app in the tray. The tray diamond shows the mode (green Eco, grey Balanced, red Performance); hovering it shows temperatures and fan speeds, or the current warning when there is one. Right-click: a small dark menu with Open and Exit (modes are chosen in the window). The OMEN key opens and hides the window.
 
 ## The modes
 | | Eco | Balanced | Performance (needs the charger) |

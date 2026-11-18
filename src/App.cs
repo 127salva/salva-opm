@@ -132,6 +132,7 @@ namespace SalvaOPM
         private readonly Logger _log;
         private readonly Stopwatch _clock = Stopwatch.StartNew();
         private readonly NotifyIcon _tray = new NotifyIcon();
+        private readonly ContextMenuStrip _menu = new ContextMenuStrip();
         private readonly System.Windows.Forms.Timer _tick = new System.Windows.Forms.Timer();
         private readonly System.Windows.Forms.Timer _retry = new System.Windows.Forms.Timer();
         private readonly PowerWatcher _watcher;
@@ -174,11 +175,21 @@ namespace SalvaOPM
             _tray.Text = "Salva OPM";
             _tray.Visible = true;
             _tray.MouseClick += delegate(object s, MouseEventArgs e) { if (e.Button == MouseButtons.Left) ToggleWindow(); };
-            ContextMenu menu = new ContextMenu();
-            menu.MenuItems.Add("Open Salva OPM", delegate { ShowWindow(); });
-            menu.MenuItems.Add("-");
-            menu.MenuItems.Add("Exit", delegate { Exit(); });
-            _tray.ContextMenu = menu;
+            // a small dark menu in the window's colours (the old Win32 menu was light grey with an empty icon column)
+            _menu.Renderer = new TrayMenuRenderer();
+            _menu.ShowImageMargin = false;
+            _menu.ShowCheckMargin = false;
+            _menu.Font = Th.Small;
+            _menu.Padding = new Padding(Th.D(4));
+            _menu.Items.Add(new ToolStripMenuItem("Open Salva OPM", null, delegate { ShowWindow(); }));
+            _menu.Items.Add(new ToolStripSeparator());
+            _menu.Items.Add(new ToolStripMenuItem("Exit", null, delegate { Exit(); }));
+            // a drop-down ignores item padding: size the items here, the renderer places the text 12 px in
+            int textW = 0;
+            foreach (ToolStripItem item in _menu.Items) if (item is ToolStripMenuItem) textW = Math.Max(textW, Th.Measure(item.Text, Th.Small).Width);
+            foreach (ToolStripItem item in _menu.Items) if (item is ToolStripMenuItem) { item.AutoSize = false; item.Size = new Size(textW + Th.D(40), Th.D(28)); }
+            _menu.Opening += delegate { Th.RoundCorners(_menu.Handle); };
+            _tray.ContextMenuStrip = _menu;
 
             _watcher = new PowerWatcher();
             _watcher.StatusChanged += delegate { OnPower(false); };
@@ -451,6 +462,7 @@ namespace SalvaOPM
             if (_form != null && !_form.IsDisposed) _form.Dispose();
             _tray.Visible = false;
             _tray.Dispose();
+            _menu.Dispose();
             _watcher.Dispose();
             Hw.Dispose();   // after the exit job; nothing touches the hardware from here on
             Engine.Sensors.Dispose();
