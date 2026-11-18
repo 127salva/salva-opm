@@ -845,6 +845,10 @@ namespace SalvaOPM
                 "Stopped after an unexpected error; the firmware drives the fans. Restart Salva OPM." })
                 if (Hints.For(w) == null) { hinted = false; Console.WriteLine("  no hint for: " + w); }
             Check(hinted && Hints.For(null) == null, "every warning the window can show has a 'what to do' line");
+            bool rising = true;
+            for (int k = 1; k <= 20; k++) if (Th.EaseOut(k / 20.0) < Th.EaseOut((k - 1) / 20.0)) rising = false;
+            Check(Th.EaseOut(0) == 0 && Th.EaseOut(1) == 1 && Th.EaseOut(-1) == 0 && Th.EaseOut(2) == 1 && Th.EaseOut(0.5) > 0.9 && rising,
+                "window motion: a strong ease-out from 0 to 1 (most of the way at half time), clamped, never going back");
         }
     }
 }

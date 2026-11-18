@@ -79,6 +79,7 @@ namespace SalvaOPM
         private readonly Seg _fan = new Seg();
         private readonly CurveView _curve = new CurveView();
         private readonly ToolTip _tip = new ToolTip();
+        private string _tipText;
         private readonly Timer _refresh = new Timer();
 
         private Engine E { get { return _app.Engine; } }
@@ -110,7 +111,7 @@ namespace SalvaOPM
             _cpu.SetBounds(Th.D(20), Th.D(176), Th.D(352), Th.D(200));
             _gpu.SetBounds(Th.D(388), Th.D(176), Th.D(352), Th.D(200));
             _fan.Picked += delegate(int i) { if (i < _fanChoices.Length) E.SetFanMode(_fanChoices[i], _app.Now()); };
-            _fan.SetBounds(Th.D(20), Th.D(392), Th.D(720), Th.D(44));
+            _fan.SetBounds(Th.D(20), Th.D(400), Th.D(720), Th.D(44));   // 24 above (new group), 8 to its curve
             _curve.Committed += delegate(int[] levels) { E.SetCurve(levels, _app.Now()); };
             _curve.SetBounds(Th.D(20), Th.D(452), Th.D(720), Th.D(204));
             Controls.Add(_status);
@@ -135,7 +136,8 @@ namespace SalvaOPM
             _status.Dot = !_app.Booted ? Th.Sub : fault == null ? Th.Ok : E.Halted || E.Guard.Active ? Th.Accent : Th.Warn;
             _status.Info = hint != null;
             _status.Cursor = hint != null ? Cursors.Help : Cursors.Default;
-            _tip.SetToolTip(_status, fault == null ? "" : hint == null ? fault : fault + "\r\n\r\nWhat to do: " + hint);
+            string tip = fault == null ? "" : hint == null ? fault : fault + "\r\n\r\nWhat to do: " + hint;
+            if (tip != _tipText) { _tipText = tip; _tip.SetToolTip(_status, tip); }   // re-setting it every 2 s would hide an open tooltip
             _modes.Items[0] = E.Controller.AutoEco ? "Eco (auto)" : "Eco";
             _modes.Index = (int)E.Effective;
             _modes.Disabled = new bool[] { mon, mon, mon || !E.Controller.PerformanceAllowed };
@@ -182,9 +184,9 @@ namespace SalvaOPM
             Graphics g = e.Graphics;
             g.Clear(Th.Bg);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            Th.Diamond(g, Th.D(38), Th.D(37), Th.D(16));
-            Th.Text(g, "Salva OPM", Th.Title, Th.TextHi, Th.D(64), Th.D(22));
-            Th.Text(g, "v" + Setup.Version, Th.Small, Th.Sub, Th.D(64) + Th.Measure("Salva OPM", Th.Title).Width + Th.D(10), Th.D(29));
+            Th.Diamond(g, Th.D(36), Th.D(37), Th.D(16));   // left tip on the 20 px content edge
+            Th.Text(g, "Salva OPM", Th.Title, Th.TextHi, Th.D(62), Th.D(22));
+            Th.Text(g, "v" + Setup.Version, Th.Small, Th.Sub, Th.D(62) + Th.Measure("Salva OPM", Th.Title).Width + Th.D(10), Th.D(29));
         }
 
         protected override void OnHandleCreated(EventArgs e)

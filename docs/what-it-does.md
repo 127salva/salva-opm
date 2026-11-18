@@ -11,6 +11,7 @@ One page:
 - **CPU and GPU panels:** the temperature (amber from 85 °C, red from 95 °C; "asleep" for a sleeping GPU), the fan speed as a ring (full at 4800 rpm; read every 2 s while the window is open) and a graph of the last 5 minutes (kept while the window is closed; a sleeping GPU leaves a gap; "Collecting…" until there are two readings). Hovering the graph shows the temperature and age of the point under the mouse.
 - **Fan switch:** Firmware | Recommended in Eco and Balanced; Firmware | Recommended | Custom in Performance. Each mode remembers its own choice.
 - **Curve:** the curve in use. Custom has 7 points at 60–90 °C that drag up and down (Shift-drag moves the whole curve); the point under the mouse shows its percentage of top speed.
+- **Feel:** a click shows a pressed look at once and applies on release; the fan switch's red pill slides (180 ms) and the chosen card fades in (150 ms). Not with the keyboard, and not when Windows animations are off.
 - **Keyboard:** Tab moves between the mode cards, the fan switch and an editable curve (a white ring shows where); arrow keys pick, Enter or Space applies; on the curve Left/Right pick a point and Up/Down move it (Shift: the whole curve).
 
 Closing the window keeps the app in the tray. The tray diamond shows the mode (green Eco, grey Balanced, red Performance); hovering it shows temperatures and fan speeds, or the current warning when there is one. Right-click: Open, the three modes, Exit. The OMEN key opens and hides the window.

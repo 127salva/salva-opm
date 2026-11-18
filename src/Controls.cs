@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 127salva
 // Portions adapted from Ohman (https://github.com/P4R1H/Ohman), GPL-3.0-or-later.
 
@@ -39,6 +39,48 @@ namespace SalvaOPM
             SegBold = new Font("Segoe UI Semibold", 11f);
             Card = new Font("Segoe UI Semibold", 12.5f);
             Big = new Font("Segoe UI Semibold", 22f);
+        }
+
+        /// <summary>The one radius scale (96 DPI units): small pills and inner focus rings, switch cells, every surface.</summary>
+        public const double RSmall = 6, RCell = 10, RSurface = 14;
+        /// <summary>Motion: the switch pill's slide and the cards' cross-fade (mouse only; skipped when Windows animations are off).</summary>
+        public const int SlideMs = 180, FadeMs = 150;
+        public static bool Motion { get { return SystemInformation.UIEffectsEnabled; } }
+
+        /// <summary>A strong ease-out (quartic): fast at first, settles softly; t is clamped to 0..1.</summary>
+        public static double EaseOut(double t)
+        {
+            t = Math.Max(0, Math.Min(1, t));
+            double u = 1 - t;
+            return 1 - u * u * u * u;
+        }
+
+        public static Color Mix(Color a, Color b, double k)
+        {
+            k = Math.Max(0, Math.Min(1, k));
+            return Color.FromArgb((int)(a.A + (b.A - a.A) * k), (int)(a.R + (b.R - a.R) * k), (int)(a.G + (b.G - a.G) * k), (int)(a.B + (b.B - a.B) * k));
+        }
+
+        public static SizeF PillSize(string s) { return new SizeF(Measure(s, Mono).Width + D(14), D(18)); }
+
+        /// <summary>A small readout pill (graph hover, curve point) with its top-left corner at (x, y).</summary>
+        public static void Pill(Graphics g, string s, float x, float y)
+        {
+            Size ls = Measure(s, Mono);
+            SizeF p = PillSize(s);
+            Fill(g, PillBg, new RectangleF(x, y, p.Width, p.Height), D(RSmall));
+            Text(g, s, Mono, TextB, (int)(x + D(7)), (int)(y + (p.Height - ls.Height) / 2f));
+        }
+
+        /// <summary>A faint light line along the top edge of something you can press (light catching the material).</summary>
+        public static void TopEdge(Graphics g, RectangleF r, float radius)
+        {
+            Region old = g.Clip;
+            g.SetClip(new RectangleF(r.X, r.Y, r.Width, radius));
+            using (Pen p = new Pen(Color.FromArgb(0x1C, 0xFF, 0xFF, 0xFF), 1))
+            using (GraphicsPath path = Round(new RectangleF(r.X + 0.5f, r.Y + 0.5f, r.Width - 1, r.Height - 1), radius))
+                g.DrawPath(p, path);
+            g.Clip = old;
         }
 
         /// <summary>A chip temperature's colour: normal, amber from 85 C (the 85 C rule), red from 95 C (the thermal guard).</summary>
@@ -168,7 +210,12 @@ namespace SalvaOPM
         public string[] Icons;
         private int _hover = -1, _focus = -1;   // _focus: the item the arrow keys are on
 
-        public Seg() { TabStop = true; }
+        public Seg()
+        {
+            TabStop = true;
+            _anim.Interval = 15;
+            _anim.Tick += delegate { Invalidate(); };
+        }
 
         protected override void OnGotFocus(EventArgs e) { _focus = Index; base.OnGotFocus(e); }
 
@@ -209,34 +256,102 @@ namespace SalvaOPM
 
         private bool IsDisabled(int i) { return Disabled != null && i < Disabled.Length && Disabled[i]; }
 
+        // ---- motion: the selection on screen follows Index; a mouse choice slides (switch) or fades (cards)
+        private int _shown = -1, _shownCount, _from = -1;   // _from: the item the motion started from (-1: none)
+        private RectangleF _fromRect;                     // the switch pill where it was when the motion started
+        private int _since;
+        private bool _mouseChose;
+        private readonly Timer _anim = new Timer();
+
+        private int MotionMs { get { return Icons != null ? Th.FadeMs : Th.SlideMs; } }
+        private double Progress() { return Th.EaseOut((Environment.TickCount - _since) / (double)MotionMs); }
+        private static float Lerp(float a, float b, double k) { return (float)(a + (b - a) * k); }
+
+        /// <summary>The switch pill as drawn now: between where it was and the chosen cell while it slides.</summary>
+        private RectangleF Presented()
+        {
+            RectangleF to = Cell(_shown < 0 ? Index : _shown);
+            if (_from < 0) return to;
+            double k = Progress();
+            return new RectangleF(Lerp(_fromRect.X, to.X, k), to.Y, Lerp(_fromRect.Width, to.Width, k), to.Height);
+        }
+
+        private void Track()
+        {
+            if (Index == _shown && Items.Length == _shownCount) { _mouseChose = false; return; }
+            if (_mouseChose && _shown >= 0 && Items.Length == _shownCount && Th.Motion)
+            {
+                _fromRect = Presented();   // from the current on-screen place, so a second click mid-way does not jump
+                _from = _shown;
+                _since = Environment.TickCount;
+                _anim.Start();
+            }
+            else { _from = -1; _anim.Stop(); }
+            _shown = Index;
+            _shownCount = Items.Length;
+            _mouseChose = false;
+        }
+
+        private void EndMotionIfDone()
+        {
+            if (_from >= 0 && Environment.TickCount - _since >= MotionMs) { _from = -1; _anim.Stop(); }
+        }
+
+        // ---- press: the pressed look on mouse-down; the choice applies on release over the same item
+        private int _press = -1;
+        private bool _pressInside;
+        private static readonly Color Pressed = Color.FromArgb(0x0A, 0x08, 0x07);
+
+        private bool IsPressed(int i) { return i == _press && _pressInside; }
+
+        private static RectangleF Inset(RectangleF r, float d) { return new RectangleF(r.X + d, r.Y + d, r.Width - 2 * d, r.Height - 2 * d); }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Th.Bg);
-            if (Icons != null) { PaintCards(g); return; }
-            Th.Fill(g, Th.Sunken, new RectangleF(0, 0, Width - 1, Height - 1), Th.D(12));
+            Track();
+            if (Icons != null) PaintCards(g); else PaintSwitch(g);
+            EndMotionIfDone();
+        }
+
+        private void PaintSwitch(Graphics g)
+        {
+            RectangleF frame = new RectangleF(0, 0, Width - 1, Height - 1);
+            Th.Fill(g, Th.Sunken, frame, Th.D(Th.RSurface));
+            Th.TopEdge(g, frame, Th.D(Th.RSurface));
             for (int i = 0; i < Items.Length; i++)
             {
-                RectangleF r = Cell(i);
-                if (i == Index) Th.Fill(g, IsDisabled(i) ? Th.Off : Th.Accent, r, Th.D(9));
-                else if (i == _hover && !IsDisabled(i)) Th.Fill(g, Th.Hover, r, Th.D(9));
-                Color c = i == Index ? Color.White : IsDisabled(i) ? Th.Section : i == _hover ? Th.TextB : Th.SegText;
-                Th.TextCenter(g, Items[i], i == Index ? Th.SegBold : Th.Seg, c, Rectangle.Round(r));
+                if (i == Index || IsDisabled(i)) continue;
+                if (IsPressed(i)) Th.Fill(g, Pressed, Inset(Cell(i), Th.D(2)), Th.D(Th.RCell));
+                else if (i == _hover) Th.Fill(g, Th.Hover, Cell(i), Th.D(Th.RCell));
             }
-            PaintFocus(g, Th.D(7));
+            if (Index >= 0 && Index < Items.Length) Th.Fill(g, IsDisabled(Index) ? Th.Off : Th.Accent, Presented(), Th.D(Th.RCell));
+            for (int i = 0; i < Items.Length; i++)
+            {
+                Color c = i == Index ? Color.White : IsDisabled(i) ? Th.Section : i == _hover ? Th.TextB : Th.SegText;
+                Th.TextCenter(g, Items[i], i == Index ? Th.SegBold : Th.Seg, c, Rectangle.Round(Cell(i)));
+            }
+            PaintFocus(g, Th.D(Th.RSmall));
         }
+
+        private static readonly Color Selected = Color.FromArgb(0x2A, 0x19, 0x18);
 
         private void PaintCards(Graphics g)
         {
+            double k = _from >= 0 ? Progress() : 1;
             for (int i = 0; i < Items.Length; i++)
             {
-                RectangleF r = Cell(i);
                 bool on = i == Index, off = IsDisabled(i);
-                Th.Fill(g, on ? Color.FromArgb(0x2A, 0x19, 0x18) : i == _hover && !off ? Th.Hover : Th.Sunken, r, Th.D(12));
-                if (on)
-                    using (Pen b = new Pen(off ? Th.Off : Th.Accent, Th.D(2)))
-                    using (GraphicsPath p = Th.Round(new RectangleF(r.X + 1, r.Y + 1, r.Width - 2, r.Height - 2), Th.D(12)))
+                double a = on ? k : i == _from ? 1 - k : 0;   // how selected it looks: fades in on the new card, out on the old
+                RectangleF r = IsPressed(i) ? Inset(Cell(i), Th.D(2)) : Cell(i);
+                Color baseFill = IsPressed(i) ? Pressed : i == _hover && !off && !on ? Th.Hover : Th.Sunken;
+                Th.Fill(g, Th.Mix(baseFill, Selected, a), r, Th.D(Th.RSurface));
+                Th.TopEdge(g, r, Th.D(Th.RSurface));
+                if (a > 0)
+                    using (Pen b = new Pen(Color.FromArgb((int)(255 * a), off ? Th.Off : Th.Accent), Th.D(2)))
+                    using (GraphicsPath p = Th.Round(new RectangleF(r.X + 1, r.Y + 1, r.Width - 2, r.Height - 2), Th.D(Th.RSurface)))
                         g.DrawPath(b, p);
                 Color c = off ? Th.Section : on ? Th.TextHi : i == _hover ? Th.TextB : Th.SegText;
                 float s = Th.D(30);
@@ -244,7 +359,7 @@ namespace SalvaOPM
                 Size ts = Th.Measure(Items[i], Th.Card);
                 Th.Text(g, Items[i], Th.Card, c, (int)(r.X + Th.D(66)), (int)(r.Y + (r.Height - ts.Height) / 2));
             }
-            PaintFocus(g, Th.D(9));
+            PaintFocus(g, Th.D(Th.RSurface - 4));
         }
 
         private int At(Point p)
@@ -253,22 +368,46 @@ namespace SalvaOPM
             return -1;
         }
 
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            int i = e.Button == MouseButtons.Left ? At(e.Location) : -1;
+            if (i >= 0 && i != Index && !IsDisabled(i)) { _press = i; _pressInside = true; Capture = true; Invalidate(); }
+            base.OnMouseDown(e);
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             int h = At(e.Location);
+            if (_press >= 0 && (h == _press) != _pressInside) { _pressInside = h == _press; Invalidate(); }
             Cursor = h >= 0 && h != Index && !IsDisabled(h) ? Cursors.Hand : Cursors.Default;   // a hand only over something clickable
             if (h != _hover) { _hover = h; Invalidate(); }
         }
-        protected override void OnMouseLeave(EventArgs e) { _hover = -1; Invalidate(); }
-        protected override void OnMouseClick(MouseEventArgs e)
+
+        protected override void OnMouseUp(MouseEventArgs e)
         {
-            int i = At(e.Location);
-            if (i < 0 || i == Index || IsDisabled(i)) return;
-            Action<int> h = Picked;
-            if (h != null) h(i);
+            int i = _press;
+            bool commit = i >= 0 && At(e.Location) == i;
+            _press = -1;
+            Capture = false;
+            Invalidate();
+            if (commit)
+            {
+                _mouseChose = true;
+                Action<int> h = Picked;
+                if (h != null) h(i);
+            }
+            base.OnMouseUp(e);
+        }
+
+        protected override void OnMouseCaptureChanged(EventArgs e) { if (_press >= 0) { _press = -1; Invalidate(); } base.OnMouseCaptureChanged(e); }
+        protected override void OnMouseLeave(EventArgs e) { _hover = -1; Invalidate(); base.OnMouseLeave(e); }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) _anim.Dispose();
+            base.Dispose(disposing);
         }
     }
-
     /// <summary>One chip's panel: name, temperature, a ring gauge of its fan speed and a graph of the last minutes.</summary>
     public sealed class ChipPanel : Ctl
     {
@@ -318,7 +457,7 @@ namespace SalvaOPM
             Graphics g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Th.Bg);
-            Th.Fill(g, Th.Sunken, new RectangleF(0, 0, Width - 1, Height - 1), Th.D(14));
+            Th.Fill(g, Th.Sunken, new RectangleF(0, 0, Width - 1, Height - 1), Th.D(Th.RSurface));
             Th.Icon(g, "chip", new RectangleF(Th.D(16), Th.D(14), Th.D(26), Th.D(26)), Th.Accent);
             Th.Text(g, Title, Th.Card, Th.TextHi, Th.D(50), Th.D(15));
             string t = Asleep ? "asleep" : double.IsNaN(Temp) ? "--" : ((int)Math.Round(Temp)) + " °C";
@@ -377,12 +516,10 @@ namespace SalvaOPM
                 using (Pen ring = new Pen(Th.Accent, Th.D(2))) g.DrawEllipse(ring, x - r, dy - r, 2 * r, 2 * r);
             }
             string label = (double.IsNaN(t) ? GapText : ((int)Math.Round(t)) + " °C") + " · " + AgeText(_hover, n, SecondsPerPoint);
-            Size ls = Th.Measure(label, Th.Mono);
-            float pw = ls.Width + Th.D(14), ph = Th.D(18);
-            float px = Math.Max(x0, Math.Min(x1 - pw, x - pw / 2)), py = dy - Th.D(12) - ph;
+            SizeF ps = Th.PillSize(label);
+            float px = Math.Max(x0, Math.Min(x1 - ps.Width, x - ps.Width / 2)), py = dy - Th.D(12) - ps.Height;
             if (py < y0 - Th.D(2)) py = dy + Th.D(12);   // no room above (a hot point): put it under the dot
-            Th.Fill(g, Th.PillBg, new RectangleF(px, py, pw, ph), Th.D(5));
-            Th.Text(g, label, Th.Mono, Th.TextB, (int)(px + Th.D(7)), (int)(py + (ph - ls.Height) / 2f));
+            Th.Pill(g, label, px, py);
         }
 
         private static float Gy(double t, float y0, float y1)
@@ -467,7 +604,7 @@ namespace SalvaOPM
             Graphics g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Th.Bg);
-            Th.Fill(g, Th.Sunken, new RectangleF(0, 0, Width - 1, Height - 1), Th.D(14));
+            Th.Fill(g, Th.Sunken, new RectangleF(0, 0, Width - 1, Height - 1), Th.D(Th.RSurface));
             if (Message != null) { Th.TextCenter(g, Message, Th.Seg, Th.Sub, new Rectangle(0, 0, Width, Height)); return; }
             using (Pen gh = new Pen(Th.GridH, 1))
                 foreach (int pct in new int[] { 100, 75, 50, 25, 0 })
@@ -510,15 +647,12 @@ namespace SalvaOPM
                     g.FillEllipse(bg, pts[i].X - r, pts[i].Y - r, 2 * r, 2 * r);
                     g.DrawEllipse(ring, pts[i].X - r, pts[i].Y - r, 2 * r, 2 * r);
                 }
-            if (KeyboardFocus) FocusRing(g, new RectangleF(0, 0, Width - 1, Height - 1), Th.D(10));
+            if (KeyboardFocus) FocusRing(g, new RectangleF(0, 0, Width - 1, Height - 1), Th.D(Th.RSurface - 4));
             int p = _drag >= 0 ? _drag : _hover >= 0 ? _hover : KeyboardFocus ? _key : -1;
             if (p < 0) return;
             string label = (int)Math.Round(100.0 * Levels[p] / Ceiling) + "%";
-            Size ls = Th.Measure(label, Th.Mono);
-            float pw = ls.Width + Th.D(14), ph = Th.D(18);
-            float px = Math.Max(X0, Math.Min(X1 - pw, pts[p].X - pw / 2)), py = Math.Max(0, pts[p].Y - Th.D(12) - ph);
-            Th.Fill(g, Th.PillBg, new RectangleF(px, py, pw, ph), Th.D(5));
-            Th.Text(g, label, Th.Mono, Th.TextB, (int)(px + Th.D(7)), (int)(py + (ph - ls.Height) / 2f));
+            SizeF ps = Th.PillSize(label);
+            Th.Pill(g, label, Math.Max(X0, Math.Min(X1 - ps.Width, pts[p].X - ps.Width / 2)), Math.Max(0, pts[p].Y - Th.D(12) - ps.Height));
         }
 
         private int HandleAt(Point p)
