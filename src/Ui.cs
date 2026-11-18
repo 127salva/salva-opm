@@ -130,9 +130,30 @@ namespace SalvaOPM
         /// <summary>Never waits: while a hardware job holds the engine this sync is skipped, and that job's Changed brings the next.</summary>
         public void Sync()
         {
-            if (!System.Threading.Monitor.TryEnter(E)) return;
+            if (!System.Threading.Monitor.TryEnter(E)) { ShowPending(); return; }
             try { SyncLocked(); }
             finally { System.Threading.Monitor.Exit(E); }
+        }
+
+        private const string FirmwareMessage = "The firmware's own fan curve is in charge.";
+
+        /// <summary>While a job holds the engine: show the clicked mode and fan choice at once, without reading the engine
+        /// (the saved fan choice of a mode is a plain settings value). The rest follows when the job is done.</summary>
+        private void ShowPending()
+        {
+            Mode? pm = _app.PendingMode;
+            FanSource? pf = _app.PendingFan;
+            if (!pm.HasValue && !pf.HasValue) return;
+            Mode shown = pm.HasValue ? pm.Value : (Mode)Math.Max(0, _modes.Index);
+            FanSource fanShown = pf.HasValue ? pf.Value : E.Settings.Fan[(int)shown];
+            _modes.Index = (int)shown;
+            _fanChoices = shown == Mode.Performance ? ThreeWay : TwoWay;
+            _fan.Items = Array.ConvertAll(_fanChoices, delegate(FanSource c) { return FanLabels.Of(c); });
+            _fan.Index = Math.Max(0, Array.IndexOf(_fanChoices, fanShown));
+            _curve.Message = fanShown == FanSource.Firmware ? FirmwareMessage : null;
+            _modes.Invalidate();
+            _fan.Invalidate();
+            _curve.Invalidate();
         }
 
         private void SyncLocked()
@@ -167,7 +188,7 @@ namespace SalvaOPM
             _fan.Items = Array.ConvertAll(_fanChoices, delegate(FanSource c) { return FanLabels.Of(c); });
             _fan.Index = Math.Max(0, Array.IndexOf(_fanChoices, fanShown));
             _fan.Disabled = Array.ConvertAll(_fanChoices, delegate(FanSource c) { return mon; });
-            _curve.Message = fanShown == FanSource.Firmware ? "The firmware's own fan curve is in charge." : null;
+            _curve.Message = fanShown == FanSource.Firmware ? FirmwareMessage : null;
             if (!_curve.Dragging)
             {
                 if (custom)

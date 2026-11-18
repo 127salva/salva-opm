@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 127salva
 
 using System;
@@ -42,7 +42,18 @@ namespace SalvaOPM
             return string.Equals(Path.GetFullPath(Application.ExecutablePath), Path.GetFullPath(InstalledExe), StringComparison.OrdinalIgnoreCase);
         }
 
-        public static bool IsInstalled() { return File.Exists(InstalledExe); }
+        /// <summary>The Apps entry goes during uninstall; the program folder only ~6 s after it (the running exe cannot delete
+        /// itself), so the file alone said "installed" if the setup was reopened at once.</summary>
+        public static bool IsInstalled()
+        {
+            if (!File.Exists(InstalledExe)) return false;
+            try
+            {
+                using (RegistryKey k = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(UninstallKey))
+                    return k != null;
+            }
+            catch (Exception) { return true; }   // cannot tell: the file decides, as before
+        }
 
         private static int Elevate(string arg)
         {

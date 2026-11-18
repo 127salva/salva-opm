@@ -232,6 +232,7 @@ namespace SalvaOPM
         /// <summary>Tray and window follow the engine (on the window thread).</summary>
         private void Refresh()
         {
+            if (_exiting) return;   // a late update from the exit job must not touch the disposed tray icon
             UpdateTray();
             if (_form != null && !_form.IsDisposed) _form.Sync();
         }
@@ -338,7 +339,7 @@ namespace SalvaOPM
 
         private void UpdateTray()
         {
-            if (!Monitor.TryEnter(Engine)) return;   // a job is running: its Changed brings the next update
+            if (_exiting || !Monitor.TryEnter(Engine)) return;   // a job is running: its Changed brings the next update
             try { UpdateTrayLocked(); }
             finally { Monitor.Exit(Engine); }
         }
