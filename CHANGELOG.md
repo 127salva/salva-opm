@@ -2,7 +2,7 @@
 
 Versions are major.minor.patch; `CONTRIBUTING.md` says how each number was used. Dates are when the build was made.
 
-## Unreleased
+## 2.4.8 - 2026-11-18
 ### Fixed
 - A mode chosen from the tray before start-up finished (the laptop's identity still unread, e.g. WMI not ready at logon) was written to the firmware. Mode choices made before start-up is done are now ignored, with a tray message to try again.
 - A concurrent TDP outside 20..82 read on entering Performance was kept as the baseline; leaving Performance then failed and stopped the app (fail safe). Such a value is no longer kept, and the log says so.

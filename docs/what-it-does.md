@@ -1,4 +1,4 @@
-# Salva OPM 2.4.7: what it does (and doesn't)
+# Salva OPM 2.4.8: what it does (and doesn't)
 
 Everything Salva OPM touches on the HP OMEN 16-ap0 with board 8E35. Source: `src/` (plain C#, built by `build.cmd` with Windows' own compiler). The one file to run is `dist\SalvaOPM-Setup.exe`. The app works offline; the setup needs internet once, only if PawnIO is missing or older than 2.2.0.
 
