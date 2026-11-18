@@ -3,6 +3,7 @@
 Log: `C:\ProgramData\SalvaOPM\log.txt` (events only; the previous file is `log.txt.old`).
 
 ## The warning in the window's status pill
+Hover the pill (the "i") to see what to do; it is the last column below.
 | Message | Meaning | What to do |
 |---|---|---|
 | `Monitoring only: …` | The laptop is not an OMEN 16-ap0 with board 8E35, or its identity could not be read. Nothing is written. | Nothing: by design. |

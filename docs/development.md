@@ -40,6 +40,7 @@ The in-box compiler is C# 5. Not available: string interpolation (`$"..."`), `?.
 | Fan behaviour | `FanCurve.cs` (pure) and `Engine.FanTick` + `CurveTests` / `CoreTests` |
 | What install or uninstall does | `Setup.cs`, `Ogh.cs`, and the tables in `docs/what-it-does.md` |
 | Window | `Ui.cs`, `Controls.cs` |
+| A new warning | `Engine.Fault`, its line in `Hints` (`Ui.cs`) and the table in `docs/troubleshooting.md` |
 
 ## Running on the real laptop
 Only through the setup (`dist\SalvaOPM-Setup.exe` → Install/Update): the app must run elevated from `C:\Program Files\Salva OPM`. Read-only tools on an installed copy, from an administrator PowerShell:

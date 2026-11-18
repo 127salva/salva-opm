@@ -6,11 +6,12 @@ Its logic follows Ohman (github.com/P4R1H/Ohman, GPL-3.0), except the Auto fan c
 
 ## The window
 One page:
-- **Header:** the logo, the name and the version; on the right a status pill: green "All good", or the current warning (amber; red for the thermal guard or the fail safe). Hovering it shows the whole text.
+- **Header:** the logo, the name and the version; on the right a status pill: "Starting…" until start-up is done, then green "All good" or the current warning (amber; red for the thermal guard or the fail safe). With a warning an "i" appears; hovering the pill shows the whole warning and what to do.
 - **Mode cards:** Eco, Balanced, Performance, each with an icon; the active one has a red border. "Eco (auto)" when the app chose Eco itself. Performance is greyed out on battery or with a charger below the laptop's requirement.
-- **CPU and GPU panels:** the temperature (amber from 85 °C, red from 95 °C; "asleep" for a sleeping GPU), the fan speed as a ring (full at 4800 rpm; read every 2 s while the window is open) and a graph of the last 5 minutes (kept while the window is closed; a sleeping GPU leaves a gap).
+- **CPU and GPU panels:** the temperature (amber from 85 °C, red from 95 °C; "asleep" for a sleeping GPU), the fan speed as a ring (full at 4800 rpm; read every 2 s while the window is open) and a graph of the last 5 minutes (kept while the window is closed; a sleeping GPU leaves a gap; "Collecting…" until there are two readings). Hovering the graph shows the temperature and age of the point under the mouse.
 - **Fan switch:** Auto alone in Eco and Balanced; Auto | Custom in Performance.
 - **Curve:** the curve in use. Custom has 7 points at 60–90 °C that drag up and down (Shift-drag moves the whole curve); the point under the mouse shows its percentage of top speed.
+- **Keyboard:** Tab moves between the mode cards, the fan switch and an editable curve (a white ring shows where); arrow keys pick, Enter or Space applies; on the curve Left/Right pick a point and Up/Down move it (Shift: the whole curve).
 
 Closing the window keeps the app in the tray. The tray diamond shows the mode (green Eco, grey Balanced, red Performance); hovering it shows temperatures and fan speeds, or the current warning when there is one. Right-click: Open, the three modes, Exit. The OMEN key opens and hides the window.
 

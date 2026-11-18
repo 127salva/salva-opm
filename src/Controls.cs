@@ -135,7 +135,26 @@ namespace SalvaOPM
             SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
             BackColor = Th.Bg;
             ForeColor = Th.TextB;
+            TabStop = false;   // only the controls that take input are Tab stops (Seg, an editable CurveView)
         }
+
+        protected override bool IsInputKey(Keys k)
+        {
+            return k == Keys.Left || k == Keys.Right || k == Keys.Up || k == Keys.Down || k == Keys.Enter || base.IsInputKey(k);
+        }
+
+        /// <summary>The keyboard focus ring: drawn only after keyboard use (ShowFocusCues), never for mouse clicks.</summary>
+        protected bool KeyboardFocus { get { return Focused && ShowFocusCues; } }
+
+        protected static void FocusRing(Graphics g, RectangleF r, float radius)
+        {
+            using (Pen p = new Pen(Th.TextHi, Th.D(1.5)))
+            using (GraphicsPath path = Th.Round(new RectangleF(r.X + Th.D(4), r.Y + Th.D(4), r.Width - Th.D(8), r.Height - Th.D(8)), radius))
+                g.DrawPath(p, path);
+        }
+
+        protected override void OnGotFocus(EventArgs e) { Invalidate(); base.OnGotFocus(e); }
+        protected override void OnLostFocus(EventArgs e) { Invalidate(); base.OnLostFocus(e); }
     }
 
     /// <summary>Ohman's segmented control: a sunken pill with the chosen item filled in the accent colour.</summary>
@@ -147,7 +166,34 @@ namespace SalvaOPM
         public event Action<int> Picked;
         /// <summary>Card style (the mode switch): one card per item, the icon named in Icons left of the name.</summary>
         public string[] Icons;
-        private int _hover = -1;
+        private int _hover = -1, _focus = -1;   // _focus: the item the arrow keys are on
+
+        public Seg() { TabStop = true; }
+
+        protected override void OnGotFocus(EventArgs e) { _focus = Index; base.OnGotFocus(e); }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            int d = e.KeyCode == Keys.Left || e.KeyCode == Keys.Up ? -1 : e.KeyCode == Keys.Right || e.KeyCode == Keys.Down ? 1 : 0;
+            if (_focus < 0 || _focus >= Items.Length) _focus = Index;
+            if (d != 0)
+            {
+                for (int i = _focus + d; i >= 0 && i < Items.Length; i += d) if (!IsDisabled(i)) { _focus = i; Invalidate(); break; }
+                e.Handled = true;
+            }
+            else if ((e.KeyCode == Keys.Enter || e.KeyCode == Keys.Space) && _focus != Index && !IsDisabled(_focus))
+            {
+                Action<int> h = Picked;
+                if (h != null) h(_focus);
+                e.Handled = true;
+            }
+            base.OnKeyDown(e);
+        }
+
+        private void PaintFocus(Graphics g, float radius)
+        {
+            if (KeyboardFocus && _focus >= 0 && _focus < Items.Length) FocusRing(g, Cell(_focus), radius);
+        }
 
         private RectangleF Cell(int i)
         {
@@ -178,6 +224,7 @@ namespace SalvaOPM
                 Color c = i == Index ? Color.White : IsDisabled(i) ? Th.Section : i == _hover ? Th.TextB : Th.SegText;
                 Th.TextCenter(g, Items[i], i == Index ? Th.SegBold : Th.Seg, c, Rectangle.Round(r));
             }
+            PaintFocus(g, Th.D(7));
         }
 
         private void PaintCards(Graphics g)
@@ -197,6 +244,7 @@ namespace SalvaOPM
                 Size ts = Th.Measure(Items[i], Th.Card);
                 Th.Text(g, Items[i], Th.Card, c, (int)(r.X + Th.D(66)), (int)(r.Y + (r.Height - ts.Height) / 2));
             }
+            PaintFocus(g, Th.D(9));
         }
 
         private int At(Point p)
@@ -312,6 +360,7 @@ namespace SalvaOPM
                 if (end - start >= 2) DrawRun(g, start, end, n, step, x1, y0, y1);
                 start = end;
             }
+            if (n < 2) Th.TextCenter(g, "Collecting…", Th.Small, Th.Sub, Rectangle.Round(new RectangleF(x0, y0, x1 - x0, y1 - y0)));
             if (_hover >= 0 && _hover < n) DrawHover(g, n, step, x0, x1, y0, y1);
         }
 
@@ -359,23 +408,30 @@ namespace SalvaOPM
         }
     }
 
-    /// <summary>The header's status: a pill with a coloured dot and one line (the full text is the control's tooltip).</summary>
+    /// <summary>The header's status: a pill with a coloured dot and one line, plus an "i" when there is something to do
+    /// (the warning and what to do are the control's tooltip).</summary>
     public sealed class StatusPill : Ctl
     {
         public Color Dot = Th.Ok;
+        public bool Info;
 
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Th.Bg);
-            float pad = Th.D(14), dot = Th.D(9);
-            float w = Math.Min(Width - 1, Th.Measure(Text, Th.Small).Width + 2 * pad + dot + Th.D(8));
+            float pad = Th.D(14), dot = Th.D(9), info = Info ? Th.D(26) : 0;
+            float w = Math.Min(Width - 1, Th.Measure(Text, Th.Small).Width + 2 * pad + dot + Th.D(8) + info);
             RectangleF r = new RectangleF(Width - 1 - w, 0, w, Height - 1);
             Th.Fill(g, Th.PillBg, r, r.Height / 2);
             using (SolidBrush b = new SolidBrush(Dot)) g.FillEllipse(b, r.X + pad, r.Y + (r.Height - dot) / 2, dot, dot);
-            Rectangle tr = Rectangle.Round(new RectangleF(r.X + pad + dot + Th.D(8), r.Y, r.Right - pad - (r.X + pad + dot + Th.D(8)), r.Height));
+            float tx = r.X + pad + dot + Th.D(8);
+            Rectangle tr = Rectangle.Round(new RectangleF(tx, r.Y, r.Right - pad - info - tx, r.Height));
             TextRenderer.DrawText(g, Text, Th.Small, tr, Th.TextB, TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter);
+            if (!Info) return;
+            float d = Th.D(16), ix = r.Right - pad - d + Th.D(4), iy = r.Y + (r.Height - d) / 2;
+            using (Pen p = new Pen(Th.TextB, Th.D(1.5))) g.DrawEllipse(p, ix, iy, d, d);
+            Th.TextCenter(g, "i", Th.SegBold, Th.TextB, Rectangle.Round(new RectangleF(ix, iy - Th.D(1), d, d)));
         }
     }
 
@@ -391,7 +447,7 @@ namespace SalvaOPM
         public event Action<int[]> Committed;
         private int _drag = -1, _hover = -1;
 
-        public bool Dragging { get { return _drag >= 0; } }
+        public bool Dragging { get { return _drag >= 0 || _keyDirty; } }
 
         private float Top0 { get { return Th.D(24); } }
         private float PlotH { get { return Height - Top0 - Th.D(30); } }
@@ -447,11 +503,12 @@ namespace SalvaOPM
             using (SolidBrush bg = new SolidBrush(Th.Sunken))
                 for (int i = 0; i < pts.Length; i++)
                 {
-                    float r = Th.D(i == _drag || i == _hover ? 6 : 4.5);
+                    float r = Th.D(i == _drag || i == _hover || (KeyboardFocus && i == _key) ? 6 : 4.5);
                     g.FillEllipse(bg, pts[i].X - r, pts[i].Y - r, 2 * r, 2 * r);
                     g.DrawEllipse(ring, pts[i].X - r, pts[i].Y - r, 2 * r, 2 * r);
                 }
-            int p = _drag >= 0 ? _drag : _hover;
+            if (KeyboardFocus) FocusRing(g, new RectangleF(0, 0, Width - 1, Height - 1), Th.D(10));
+            int p = _drag >= 0 ? _drag : _hover >= 0 ? _hover : KeyboardFocus ? _key : -1;
             if (p < 0) return;
             string label = (int)Math.Round(100.0 * Levels[p] / Ceiling) + "%";
             Size ls = Th.Measure(label, Th.Mono);
@@ -472,25 +529,59 @@ namespace SalvaOPM
         {
             if (_drag >= 0 && e.Button == MouseButtons.Left)
             {
-                int lvl = Legal(_drag, LevelAt(e.Y));
-                if (lvl == Levels[_drag]) return;
-                if ((ModifierKeys & Keys.Shift) != 0)
-                {
-                    int d = lvl - Levels[_drag];
-                    for (int i = 0; i < Levels.Length; i++) Levels[i] = Legal(i, Levels[i] + d);
-                }
-                else
-                {
-                    Levels[_drag] = lvl;
-                    for (int i = _drag + 1; i < Levels.Length; i++) if (Levels[i] < lvl) Levels[i] = lvl;   // never falls as it gets hotter
-                    for (int i = _drag - 1; i >= 0; i--) if (Levels[i] > lvl) Levels[i] = Legal(i, lvl);
-                }
-                for (int i = 1; i < Levels.Length; i++) if (Levels[i] < Levels[i - 1]) Levels[i] = Levels[i - 1];   // floors differ per point: keep it rising
-                Invalidate();
+                if (MovePoint(_drag, LevelAt(e.Y), (ModifierKeys & Keys.Shift) != 0)) Invalidate();
                 return;
             }
             int h = HandleAt(e.Location);
             if (h != _hover) { _hover = h; Cursor = h >= 0 ? Cursors.Hand : Cursors.Default; Invalidate(); }
+        }
+
+        /// <summary>Point i to level lvl (Shift: the whole curve by the same step); the curve never falls as it gets hotter.</summary>
+        private bool MovePoint(int i, int lvl, bool shift)
+        {
+            lvl = Legal(i, lvl);
+            if (lvl == Levels[i]) return false;
+            if (shift)
+            {
+                int d = lvl - Levels[i];
+                for (int k = 0; k < Levels.Length; k++) Levels[k] = Legal(k, Levels[k] + d);
+            }
+            else
+            {
+                Levels[i] = lvl;
+                for (int k = i + 1; k < Levels.Length; k++) if (Levels[k] < lvl) Levels[k] = lvl;
+                for (int k = i - 1; k >= 0; k--) if (Levels[k] > lvl) Levels[k] = Legal(k, lvl);
+            }
+            for (int k = 1; k < Levels.Length; k++) if (Levels[k] < Levels[k - 1]) Levels[k] = Levels[k - 1];   // floors differ per point: keep it rising
+            return true;
+        }
+
+        // keyboard: Left/Right pick a point, Up/Down move it one level (Shift: the whole curve); saved when the key is released
+        private int _key;
+        private bool _keyDirty;
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (!ReadOnly)
+            {
+                if (e.KeyCode == Keys.Left || e.KeyCode == Keys.Right)
+                {
+                    _key = Math.Max(0, Math.Min(Levels.Length - 1, _key + (e.KeyCode == Keys.Left ? -1 : 1)));
+                    Invalidate(); e.Handled = true;
+                }
+                else if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
+                {
+                    if (MovePoint(_key, Levels[_key] + (e.KeyCode == Keys.Up ? 1 : -1), e.Shift)) { _keyDirty = true; Invalidate(); }
+                    e.Handled = true;
+                }
+            }
+            base.OnKeyDown(e);
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            if (_keyDirty) { _keyDirty = false; Action<int[]> h = Committed; if (h != null) h((int[])Levels.Clone()); }
+            base.OnKeyUp(e);
         }
 
         protected override void OnMouseDown(MouseEventArgs e) { _drag = HandleAt(e.Location); if (_drag >= 0) { Capture = true; Invalidate(); } }

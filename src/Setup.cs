@@ -479,7 +479,7 @@ namespace SalvaOPM
         private void Work(bool install)
         {
             _go.Enabled = _remove.Enabled = false;
-            _status = (install ? "Installing" : "Uninstalling") + "... (approve the admin prompt)";
+            _status = (install ? "Installing" : "Uninstalling") + "… (approve the admin prompt)";
             Invalidate();
             DateTime started = DateTime.UtcNow.AddSeconds(-2);
             Thread t = new Thread(delegate()

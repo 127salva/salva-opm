@@ -34,6 +34,33 @@ namespace SalvaOPM
         }
     }
 
+    /// <summary>What to do about each warning the window can show: the "What to do" column of docs/troubleshooting.md
+    /// (change both together). Null when there is no warning.</summary>
+    public static class Hints
+    {
+        private static readonly string[][] Table = {
+            new string[] { "Monitoring only", "Nothing to do: this is not the laptop the app was made for, so it writes nothing." },
+            new string[] { "(back to Balanced)", "Try Performance again. If it repeats, close other tuning tools and send the log." },
+            new string[] { "could not apply", "Wait: it retries at the next 45 s heartbeat. If it stays, restart the PC." },
+            new string[] { "Thermal guard", "Let it cool: it releases after a minute below 85 °C (ambient 54 °C). Check the vents and the load." },
+            new string[] { "Fans handed to the firmware", "Safe: the firmware's own curve runs. Restart the app to try again; send the log if it repeats." },
+            new string[] { "No CPU temperature", "Restart Windows once after installing. Then run the setup → Update while online." },
+            new string[] { "Fan writes failing", "Usually clears by itself." },
+            new string[] { "GPU power preset", "Switch mode once. Send the log if it repeats." },
+            new string[] { "power read failed", "Switch mode once. Send the log if it repeats." },
+            new string[] { "is not the validated", "Repeat the checks in docs/user-tests.md before trusting it." },
+            new string[] { "another tool keeps changing", "Close other tuning tools; check that OMEN Gaming Hub is not back." },
+            new string[] { "Performance needs the charger", "Plug in the original charger." },
+            new string[] { "Stopped after an unexpected error", "Restart the app (sign out and in) and send log.txt if it repeats." } };
+
+        public static string For(string warning)
+        {
+            if (warning == null) return null;
+            foreach (string[] row in Table) if (warning.IndexOf(row[0], StringComparison.Ordinal) >= 0) return row[1];
+            return null;
+        }
+    }
+
     /// <summary>The whole window, one page: a header (logo, name, version, a status pill with any warning); the three
     /// modes as cards; a CPU and a GPU panel (temperature, fan speed, the last 5 minutes); the fan switch (Auto alone in Eco
     /// and Balanced, Auto | Custom in Performance); and the curve.</summary>
@@ -101,10 +128,12 @@ namespace SalvaOPM
         public void Sync()
         {
             bool mon = E.MonitorOnly, perf = E.Effective == Mode.Performance;
-            string fault = E.Fault;
-            _status.Text = fault ?? "All good";
-            _status.Dot = fault == null ? Th.Ok : E.Halted || E.Guard.Active ? Th.Accent : Th.Warn;
-            _tip.SetToolTip(_status, fault ?? "");
+            string fault = _app.Booted ? E.Fault : null, hint = Hints.For(fault);
+            _status.Text = !_app.Booted ? "Starting…" : fault ?? "All good";
+            _status.Dot = !_app.Booted ? Th.Sub : fault == null ? Th.Ok : E.Halted || E.Guard.Active ? Th.Accent : Th.Warn;
+            _status.Info = hint != null;
+            _status.Cursor = hint != null ? Cursors.Help : Cursors.Default;
+            _tip.SetToolTip(_status, fault == null ? "" : hint == null ? fault : fault + "\r\n\r\nWhat to do: " + hint);
             _modes.Items[0] = E.Controller.AutoEco ? "Eco (auto)" : "Eco";
             _modes.Index = (int)E.Effective;
             _modes.Disabled = new bool[] { mon, mon, mon || !E.Controller.PerformanceAllowed };
@@ -140,6 +169,7 @@ namespace SalvaOPM
                     _curve.ReadOnly = true;
                 }
             }
+            _curve.TabStop = !_curve.ReadOnly;   // the Auto curve is shown, not edited
             foreach (Control c in Controls) c.Invalidate();
         }
 
@@ -150,7 +180,7 @@ namespace SalvaOPM
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             Th.Diamond(g, Th.D(38), Th.D(37), Th.D(16));
             Th.Text(g, "Salva OPM", Th.Title, Th.TextHi, Th.D(64), Th.D(22));
-            Th.Text(g, "v" + Setup.Version, Th.Mono, Th.Sub, Th.D(64) + Th.Measure("Salva OPM", Th.Title).Width + Th.D(10), Th.D(29));
+            Th.Text(g, "v" + Setup.Version, Th.Small, Th.Sub, Th.D(64) + Th.Measure("Salva OPM", Th.Title).Width + Th.D(10), Th.D(29));
         }
 
         protected override void OnHandleCreated(EventArgs e)

@@ -809,6 +809,14 @@ namespace SalvaOPM
                 "temperature history: oldest first, the oldest point dropped when full, a gap kept as a gap");
             Check(ChipPanel.AgeText(59, 60, 5) == "now" && ChipPanel.AgeText(52, 60, 5) == "35 s ago" && ChipPanel.AgeText(19, 60, 5) == "3 min 20 s ago"
                 && ChipPanel.AgeText(23, 60, 5) == "3 min ago", "graph hover: the age of a point under the mouse");
+            bool hinted = true;
+            foreach (string w in new string[] { "Monitoring only: test", "could not apply Eco (the BIOS did not answer)", "Thermal guard: fans at maximum",
+                "Fans handed to the firmware: test", "No CPU temperature: the firmware drives the fans", "Fan writes failing; retrying once a minute",
+                "GPU power preset not accepted by the firmware", "read-back failed (back to Balanced)", "power read failed", Identity.BiosWarning("F.14"),
+                "another tool keeps changing the firmware (is OMEN Gaming Hub running?); switched to Balanced", "Performance needs the charger connected",
+                "Stopped after an unexpected error; the firmware drives the fans. Restart Salva OPM." })
+                if (Hints.For(w) == null) { hinted = false; Console.WriteLine("  no hint for: " + w); }
+            Check(hinted && Hints.For(null) == null, "every warning the window can show has a 'what to do' line");
         }
     }
 }

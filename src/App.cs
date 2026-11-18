@@ -137,6 +137,8 @@ namespace SalvaOPM
         }
 
         public long Now() { return _clock.ElapsedMilliseconds; }
+        /// <summary>False until start-up is done (the identity read and the first apply); the window shows "Starting…".</summary>
+        public bool Booted { get { return _booted; } }
 
         /// <summary>False when the identity could not be read yet (WMI not ready at early logon).</summary>
         private bool CheckIdentity()
