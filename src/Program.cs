@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 127salva
 
 using System;
@@ -135,15 +135,18 @@ namespace SalvaOPM
                 Engine engine = new Engine(bios, settings, win, sensors, new GovernorConfig(), log.Write);
                 // fail safe: an unexpected error stops all writes for this session and hands everything to the firmware
                 int errors = 0;
+                App app = null;
                 Application.ThreadException += delegate(object s, ThreadExceptionEventArgs e)
                 {
                     if (++errors <= 5) log.Write("unhandled: " + e.Exception);
-                    engine.FailSafe(e.Exception.GetType().Name + ": " + e.Exception.Message);
+                    string why = e.Exception.GetType().Name + ": " + e.Exception.Message;
+                    if (app != null) app.Hw.Post("failsafe", delegate { engine.FailSafe(why); });   // on the hardware thread, like every engine call
+                    else lock (engine) engine.FailSafe(why);
                 };
                 // other threads: the process ends; the firmware drops the host state by itself within ~2 minutes
                 AppDomain.CurrentDomain.UnhandledException += delegate(object s, UnhandledExceptionEventArgs e) { log.Write("fatal: " + e.ExceptionObject); };
                 EventWaitHandle show = demo ? null : CreateShowEvent();
-                App app = new App(engine, power, demo, log, show);
+                app = new App(engine, power, demo, log, show);
                 if (demo) app.ShowWindow();
                 Application.Run(app);
                 if (show != null) show.Dispose();

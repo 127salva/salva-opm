@@ -109,9 +109,9 @@ namespace SalvaOPM
             _gpu.GapText = "asleep";
             _cpu.SetBounds(Th.D(20), Th.D(176), Th.D(352), Th.D(200));
             _gpu.SetBounds(Th.D(388), Th.D(176), Th.D(352), Th.D(200));
-            _fan.Picked += delegate(int i) { if (i < _fanChoices.Length) E.SetFanMode(_fanChoices[i], _app.Now()); };
+            _fan.Picked += delegate(int i) { if (i < _fanChoices.Length) _app.ChooseFan(_fanChoices[i]); };
             _fan.SetBounds(Th.D(20), Th.D(400), Th.D(720), Th.D(44));   // 24 above (new group), 8 to its curve
-            _curve.Committed += delegate(int[] levels) { E.SetCurve(levels, _app.Now()); };
+            _curve.Committed += delegate(int[] levels) { _app.SetCurve(levels); };
             _curve.SetBounds(Th.D(20), Th.D(452), Th.D(720), Th.D(204));
             Controls.Add(_status);
             Controls.Add(_modes);
@@ -122,14 +122,26 @@ namespace SalvaOPM
 
             Sync();
             _refresh.Interval = 2000;
-            _refresh.Tick += delegate { E.ReadFans(_app.Now()); Sync(); };   // fan speeds every 2 s while the window is open
+            _refresh.Tick += delegate { _app.ReadFans(); };   // fan speeds every 2 s while the window is open (the job then syncs)
             _refresh.Start();
         }
 
         /// <summary>Brings every control in line with the engine. Cheap; called on engine changes and every 2 s.</summary>
+        /// <summary>Never waits: while a hardware job holds the engine this sync is skipped, and that job's Changed brings the next.</summary>
         public void Sync()
         {
-            bool mon = E.MonitorOnly, perf = E.Effective == Mode.Performance;
+            if (!System.Threading.Monitor.TryEnter(E)) return;
+            try { SyncLocked(); }
+            finally { System.Threading.Monitor.Exit(E); }
+        }
+
+        private void SyncLocked()
+        {
+            // a clicked choice shows at once, before the hardware thread has applied it
+            Mode shown = _app.PendingMode ?? E.Effective;
+            FanSource fanShown = _app.PendingFan ?? E.Settings.Fan[(int)shown];
+            bool mon = E.MonitorOnly, perf = shown == Mode.Performance;
+            bool custom = perf && fanShown == FanSource.Custom;
             string fault = _app.Booted ? E.Fault : null, hint = Hints.For(fault);
             _status.Text = !_app.Booted ? "Starting…" : fault ?? "All good";
             _status.Dot = !_app.Booted ? Th.Sub : fault == null ? Th.Ok : E.Halted || E.Guard.Active ? Th.Accent : Th.Warn;
@@ -138,7 +150,7 @@ namespace SalvaOPM
             string tip = fault == null ? "" : hint == null ? fault : fault + "\r\n\r\nWhat to do: " + hint;
             if (tip != _tipText) { _tipText = tip; _tip.SetToolTip(_status, tip); }   // re-setting it every 2 s would hide an open tooltip
             _modes.Items[0] = E.Controller.AutoEco ? "Eco (auto)" : "Eco";
-            _modes.Index = (int)E.Effective;
+            _modes.Index = (int)shown;
             _modes.Disabled = new bool[] { mon, mon, mon || !E.Controller.PerformanceAllowed };
 
             long now = _app.Now();
@@ -153,12 +165,12 @@ namespace SalvaOPM
 
             _fanChoices = perf ? ThreeWay : TwoWay;
             _fan.Items = Array.ConvertAll(_fanChoices, delegate(FanSource c) { return FanLabels.Of(c); });
-            _fan.Index = Math.Max(0, Array.IndexOf(_fanChoices, E.FanChoice));
+            _fan.Index = Math.Max(0, Array.IndexOf(_fanChoices, fanShown));
             _fan.Disabled = Array.ConvertAll(_fanChoices, delegate(FanSource c) { return mon; });
-            _curve.Message = E.FirmwareFans ? "The firmware's own fan curve is in charge." : null;
+            _curve.Message = fanShown == FanSource.Firmware ? "The firmware's own fan curve is in charge." : null;
             if (!_curve.Dragging)
             {
-                if (E.CustomFans)
+                if (custom)
                 {
                     _curve.Temps = FanCurve.CustomTemps;
                     _curve.Levels = (int[])E.Settings.Curve.Clone();

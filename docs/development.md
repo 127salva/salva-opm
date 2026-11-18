@@ -40,6 +40,7 @@ The in-box compiler is C# 5. Not available: string interpolation (`$"..."`), `?.
 | Fan behaviour | `FanCurve.cs` (pure) and `Engine.FanTick` + `CurveTests` / `CoreTests` |
 | What install or uninstall does | `Setup.cs`, `Ogh.cs`, and the tables in `docs/what-it-does.md` |
 | Window | `Ui.cs`, `Controls.cs` |
+| Anything that calls the engine or the firmware | a job on `App.Hw` (`HardwareThread`); never from the window thread |
 | A new warning | `Engine.Fault`, its line in `Hints` (`Ui.cs`) and the table in `docs/troubleshooting.md` |
 
 ## Running on the real laptop

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 
 namespace SalvaOPM
 {
@@ -855,6 +856,24 @@ namespace SalvaOPM
                 "ring glide: an ease-in-out from 0 to 1, slow at both ends, half way at half time");
             Check(ChipPanel.SpanText(9, 60, 5) == "40 s" && ChipPanel.SpanText(27, 60, 5) == "2 min 10 s" && ChipPanel.SpanText(60, 60, 5) == "5 min",
                 "graph: the span shown under a graph that is still filling up");
+            // the hardware thread: jobs with the same key collapse into the last one, in order; an exception reaches the callback
+            List<string> ran = new List<string>();
+            Exception seen = null;
+            bool waited;
+            using (HardwareThread hw = new HardwareThread(new object(), delegate(Exception e) { seen = e; }))
+            {
+                ManualResetEvent hold = new ManualResetEvent(false);
+                hw.Post("gate", delegate { hold.WaitOne(5000); });
+                hw.Post("mode", delegate { ran.Add("mode1"); });
+                hw.Post("mode", delegate { ran.Add("mode2"); });
+                hw.Post("fan", delegate { ran.Add("fan"); });
+                hw.Post("mode", delegate { ran.Add("mode3"); });
+                hold.Set();
+                hw.Post("boom", delegate { throw new InvalidOperationException("test"); });
+                waited = hw.RunAndWait(delegate { ran.Add("last"); }, 5000);
+            }
+            Check(waited && string.Join(",", ran.ToArray()) == "mode3,fan,last" && seen != null,
+                "hardware thread: fast clicks collapse into the last choice, in order; a failing job reaches the fail safe and the thread goes on");
         }
     }
 }

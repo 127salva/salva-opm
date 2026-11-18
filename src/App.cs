@@ -1,7 +1,8 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 127salva
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -31,6 +32,82 @@ namespace SalvaOPM
     }
 
     /// <summary>
+    /// The one thread that does all hardware work (every WMI call takes 30–100 ms; on the window's thread a mode change froze
+    /// the window for about a second). Jobs run one at a time, in order, inside lock (gate); a job posted with the key of a
+    /// job still waiting replaces it, so fast clicks collapse into the last choice and timer ticks never pile up.
+    /// </summary>
+    public sealed class HardwareThread : IDisposable
+    {
+        private readonly object _gate, _q = new object();
+        private readonly Action<Exception> _onError;
+        private readonly List<string> _order = new List<string>();
+        private readonly Dictionary<string, Action> _jobs = new Dictionary<string, Action>();
+        private readonly Thread _thread;
+        private bool _stop;
+        private int _waitKeys;
+
+        /// <summary>onError runs on this thread, inside the gate (the fail safe).</summary>
+        public HardwareThread(object gate, Action<Exception> onError)
+        {
+            _gate = gate;
+            _onError = onError;
+            _thread = new Thread(Loop);
+            _thread.IsBackground = true;
+            _thread.Name = "SalvaOPM hardware";
+            _thread.Start();
+        }
+
+        public void Post(string key, Action job)
+        {
+            lock (_q)
+            {
+                if (_stop) return;
+                if (!_jobs.ContainsKey(key)) _order.Add(key);
+                _jobs[key] = job;
+                Monitor.Pulse(_q);
+            }
+        }
+
+        /// <summary>Runs job after the waiting ones and blocks until it is done or timeoutMs passed (exit, log-off).</summary>
+        public bool RunAndWait(Action job, int timeoutMs)
+        {
+            using (ManualResetEvent done = new ManualResetEvent(false))
+            {
+                Post("wait" + Interlocked.Increment(ref _waitKeys), delegate { try { job(); } finally { done.Set(); } });
+                return done.WaitOne(timeoutMs);
+            }
+        }
+
+        private void Loop()
+        {
+            while (true)
+            {
+                Action job;
+                lock (_q)
+                {
+                    while (_order.Count == 0 && !_stop) Monitor.Wait(_q);
+                    if (_order.Count == 0) return;
+                    string key = _order[0];
+                    _order.RemoveAt(0);
+                    job = _jobs[key];
+                    _jobs.Remove(key);
+                }
+                lock (_gate)
+                {
+                    try { job(); }
+                    catch (Exception e) { try { if (_onError != null) _onError(e); } catch (Exception) { } }
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            lock (_q) { _stop = true; Monitor.Pulse(_q); }
+            _thread.Join(3000);
+        }
+    }
+
+    /// <summary>
     /// The running app: tray icon, the 5 s engine timer, power events, the OMEN key and the window.
     /// The window is created when shown and disposed when closed, so the idle app holds no UI. --demo runs all of it
     /// against the simulator (no hardware, no Windows setting, OGH left alone).
@@ -44,6 +121,11 @@ namespace SalvaOPM
         public readonly Icon AppIcon;
         /// <summary>The window's graphs: 5 minutes of 5 s readings, kept while the window is closed.</summary>
         public readonly TempHistory CpuHistory = new TempHistory(60), GpuHistory = new TempHistory(60);
+        /// <summary>All hardware work runs here; the window thread only posts jobs and reads what it can without waiting.</summary>
+        public readonly HardwareThread Hw;
+        /// <summary>A choice clicked but not applied yet: the window shows it at once (null: none waiting).</summary>
+        public Mode? PendingMode;
+        public FanSource? PendingFan;
         private readonly IPowerSource _power;
         private readonly bool _demo;
         private readonly Logger _log;
@@ -60,9 +142,9 @@ namespace SalvaOPM
         private ManagementEventWatcher _key;
         private MainForm _form;
         private int _bootDelay = 5000, _ticks;
-        private long _lastChoose = -1000;
         private DateTime _lastTickWall = DateTime.MinValue;
-        private bool _booted, _exiting, _idDone, _haltShown;
+        private volatile bool _booted;
+        private bool _exiting, _idDone, _haltShown;
 
         public App(Engine engine, IPowerSource power, bool demo, Logger log, EventWaitHandle showSignal)
         {
@@ -78,7 +160,13 @@ namespace SalvaOPM
                 MakeIcon(Color.FromArgb(0xD0, 0xCB, 0xC7), Color.FromArgb(0x7A, 0x75, 0x71)),
                 AppIcon };
             if (!_demo) Engine.KillOgh = delegate { Ogh.KillBackground(_log.Write); };
-            Engine.Changed += delegate { UpdateTray(); if (_form != null && !_form.IsDisposed) _form.Sync(); };
+            // the engine changes on the hardware thread; the window and the tray follow on their own thread
+            Engine.Changed += delegate { OnUi(Refresh); };
+            Hw = new HardwareThread(Engine, delegate(Exception e)
+            {
+                _log.Write("unhandled on the hardware thread: " + e);
+                Engine.FailSafe(e.GetType().Name + ": " + e.Message);
+            });
 
             _tray.Icon = AppIcon;
             _tray.Text = "Salva OPM";
@@ -111,11 +199,12 @@ namespace SalvaOPM
                 }
                 _lastTickWall = wall;
                 if (_booted)
-                {
-                    Engine.Tick(Now());
-                    CpuHistory.Add(Engine.Sensors.CpuTemp);
-                    GpuHistory.Add(Engine.Sensors.GpuAsleep ? double.NaN : Engine.Sensors.GpuTemp);
-                }
+                    Hw.Post("tick", delegate
+                    {
+                        Engine.Tick(Now());
+                        double cpu = Engine.Sensors.CpuTemp, gpu = Engine.Sensors.GpuAsleep ? double.NaN : Engine.Sensors.GpuTemp;
+                        OnUi(delegate { CpuHistory.Add(cpu); GpuHistory.Add(gpu); });   // only the window thread touches the graphs
+                    });
                 // WMI leaves a few handles per BIOS call until .NET cleans up; with so little allocation that can take long
                 if (++_ticks % 60 == 0) { GC.Collect(); GC.WaitForPendingFinalizers(); }
             };
@@ -137,6 +226,15 @@ namespace SalvaOPM
         }
 
         public long Now() { return _clock.ElapsedMilliseconds; }
+
+        private void OnUi(Action a) { _ui.Post(delegate { a(); }, null); }
+
+        /// <summary>Tray and window follow the engine (on the window thread).</summary>
+        private void Refresh()
+        {
+            UpdateTray();
+            if (_form != null && !_form.IsDisposed) _form.Sync();
+        }
         /// <summary>False until start-up is done (the identity read and the first apply); the window shows "Starting…".</summary>
         public bool Booted { get { return _booted; } }
 
@@ -158,27 +256,31 @@ namespace SalvaOPM
             return true;
         }
 
+        /// <summary>Start-up on the hardware thread; a failure is retried from the window thread with a growing delay.</summary>
         private void Boot()
         {
-            if (!_demo && !_idDone) _idDone = CheckIdentity();
-            bool ok = _demo || _idDone;
-            if (ok)
+            bool last = _bootDelay > 80000;   // after this try, give up retrying
+            Hw.Post("boot", delegate
             {
-                PowerSnapshot p = _power.Read();
-                Engine.SetPowerInputs(p.OnAc, p.BatteryDrain, p.BatteryPercent);
-                ok = Engine.Boot(p.PowerOk, Now());
-            }
-            UpdateTray();
-            if (ok) { _booted = true; return; }
-            if (_bootDelay > 80000)   // gave up retrying
-            {
-                if (!_demo && !_idDone) { Engine.MonitorOnly = true; Engine.MonitorReason = "the laptop's identity could not be read"; }
-                _booted = true;
-                return;
-            }
-            _retry.Interval = _bootDelay;
-            _bootDelay *= 2;
-            _retry.Start();
+                if (!_demo && !_idDone) _idDone = CheckIdentity();
+                bool ok = _demo || _idDone;
+                if (ok)
+                {
+                    PowerSnapshot p = _power.Read();
+                    Engine.SetPowerInputs(p.OnAc, p.BatteryDrain, p.BatteryPercent);
+                    ok = Engine.Boot(p.PowerOk, Now());
+                }
+                if (!ok && last && !_demo && !_idDone) { Engine.MonitorOnly = true; Engine.MonitorReason = "the laptop's identity could not be read"; }
+                if (ok || last) _booted = true;
+                OnUi(delegate
+                {
+                    Refresh();
+                    if (_booted) return;
+                    _retry.Interval = _bootDelay;
+                    _bootDelay *= 2;
+                    _retry.Start();
+                });
+            });
         }
 
         private void OnPower(bool resumed)
@@ -186,10 +288,13 @@ namespace SalvaOPM
             if (!_booted) return;
             long now = Now();
             if (!resumed && !_flap.Allow(now)) { _retry.Interval = 30000; _retry.Start(); return; }
-            PowerSnapshot p = _power.Read();
-            Engine.SetPowerInputs(p.OnAc, p.BatteryDrain, p.BatteryPercent);
-            if (resumed) Engine.Resume(p.PowerOk, now); else Engine.PowerChanged(p.PowerOk, now);
-            UpdateTray();
+            Hw.Post(resumed ? "resume" : "power", delegate
+            {
+                PowerSnapshot p = _power.Read();   // the charger is read through WMI too
+                Engine.SetPowerInputs(p.OnAc, p.BatteryDrain, p.BatteryPercent);
+                if (resumed) Engine.Resume(p.PowerOk, Now()); else Engine.PowerChanged(p.PowerOk, Now());
+                OnUi(Refresh);
+            });
         }
 
         public void Choose(Mode m)
@@ -199,15 +304,46 @@ namespace SalvaOPM
                 _tray.ShowBalloonTip(3000, "Salva OPM", "Starting up; try again in a moment.", ToolTipIcon.Info);
                 return;
             }
-            long now = Now();
-            if (now - _lastChoose < 1000) return;   // no rapid profile toggling
-            _lastChoose = now;
-            if (!Engine.Select(m, now) && Engine.LastError != null)
-                _tray.ShowBalloonTip(4000, "Salva OPM", Engine.LastError, ToolTipIcon.Warning);
-            UpdateTray();
+            // shown at once; applied on the hardware thread, where fast clicks collapse into the last one
+            PendingMode = m;
+            Refresh();
+            Hw.Post("mode", delegate
+            {
+                string error = Engine.Select(m, Now()) ? null : Engine.LastError;
+                OnUi(delegate
+                {
+                    if (PendingMode == m) PendingMode = null;
+                    if (error != null) _tray.ShowBalloonTip(4000, "Salva OPM", error, ToolTipIcon.Warning);
+                    Refresh();
+                });
+            });
         }
 
+        /// <summary>The fan choice of the mode on screen, shown at once and applied on the hardware thread.</summary>
+        public void ChooseFan(FanSource f)
+        {
+            PendingFan = f;
+            Refresh();
+            Hw.Post("fan", delegate
+            {
+                Engine.SetFanMode(f, Now());
+                OnUi(delegate { if (PendingFan == f) PendingFan = null; Refresh(); });
+            });
+        }
+
+        public void SetCurve(int[] levels) { Hw.Post("curve", delegate { Engine.SetCurve(levels, Now()); }); }
+
+        /// <summary>The open window reads the fan speeds every 2 s.</summary>
+        public void ReadFans() { Hw.Post("fans", delegate { Engine.ReadFans(Now()); OnUi(Refresh); }); }
+
         private void UpdateTray()
+        {
+            if (!Monitor.TryEnter(Engine)) return;   // a job is running: its Changed brings the next update
+            try { UpdateTrayLocked(); }
+            finally { Monitor.Exit(Engine); }
+        }
+
+        private void UpdateTrayLocked()
         {
             if (Engine.Halted && !_haltShown)
             {
@@ -278,13 +414,20 @@ namespace SalvaOPM
             if (_exiting) return;
             _exiting = true;
             _tick.Stop();   // after parking, nothing may take the fans back
-            try { Engine.Exit(true); } catch (Exception) { }
+            _retry.Stop();
+            Hw.RunAndWait(delegate { try { Engine.Exit(true); } catch (Exception) { } }, 10000);
             CleanExitFlag();
         }
 
         public void Exit()
         {
-            if (!_exiting) { _exiting = true; _tick.Stop(); try { Engine.Exit(false); } catch (Exception) { } }
+            if (!_exiting)
+            {
+                _exiting = true;
+                _tick.Stop();
+                _retry.Stop();
+                Hw.RunAndWait(delegate { try { Engine.Exit(false); } catch (Exception) { } }, 10000);
+            }
             ExitThread();
         }
 
@@ -299,6 +442,7 @@ namespace SalvaOPM
             _tray.Visible = false;
             _tray.Dispose();
             _watcher.Dispose();
+            Hw.Dispose();   // after the exit job; nothing touches the hardware from here on
             Engine.Sensors.Dispose();
             CleanExitFlag();
             base.ExitThreadCore();

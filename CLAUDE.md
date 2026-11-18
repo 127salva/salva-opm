@@ -4,7 +4,7 @@ A Windows tray app that replaces OMEN Gaming Hub's performance control on one la
 
 ## Where it stands (2.4.8, 2026-11-18)
 - Feature-complete for its owner. Every check in `docs/user-tests.md` (H1–H7) passed on the laptop; H8 (a fresh Windows install) is not done yet: planned for the owner's next clean Windows install. H9 (the Firmware fan choice of 2.5.0) passed on 2026-11-18.
-- `build.cmd`: 202 self-checks, 0 failures.
+- `build.cmd`: 203 self-checks, 0 failures.
 - The table "Every feature: how it is checked" in `docs/testing.md` shows, for each feature, whether it was seen on the laptop, only in the simulator, or never.
 - Releases: GitHub releases of `127salva/salva-opm`; the first public one was v2.4.3; each release has a tag `vX.Y.Z` and its SHA-256 in the release notes. If the tag of the version in `src/Setup.cs` is missing, that version has not been published yet.
 - Open points, none blocking:
@@ -21,6 +21,7 @@ A Windows tray app that replaces OMEN Gaming Hub's performance control on one la
 - **Power and GPU writes made while running are read back; fan writes are checked against the measured fan speeds** (from 2500 rpm up, over a minute: `WatchFans`). The firmware answers 0 to writes it ignores. The thermal profile has no known read, and the writes on the way out (leaving Performance, fail safe, start-up TDP repair, uninstall) are not read back; the heartbeat's re-send of Performance power is checked by the next heartbeat.
 - **Host state lapses.** The firmware drops host power limits, profile and fan levels about two minutes after the last refresh (measured: PL still set at 106 s, gone at 117 s; the simulator uses 110 s). The app waits 125 s, then checks every 5 s until PL reads 0/0 (at most 180 s; a thermal guard in that time restarts the wait); on the laptop that took 125–131 s. A profile and GPU re-send during the lapse kept it alive (measured); fan writes and type 16 refresh it by design (Linux `hp-wmi`). So nothing is sent during a lapse: see `StartLapse`, `EndLapse` and the lapse checks in `Engine.Apply` and `Engine.Tick` (`src/Engine.cs`), and `docs/architecture.md`.
 - **Pushing, tagging, releasing and anything on GitHub** only with the owner's explicit OK each time.
+- **One hardware thread.** Every `Engine` call and firmware read runs as a job on `App.Hw` (`HardwareThread`); the window thread never calls the engine directly and reads it only with `Monitor.TryEnter`.
 - **C# 5 only** (`csc.exe` that ships with Windows, .NET Framework 4.8): no `$"..."`, `?.`, `nameof`, `=>` members, tuples, pattern matching. Warnings are errors.
 - **Every source file** starts with `// SPDX-License-Identifier: GPL-3.0-or-later` and `// Copyright (C) 2026 127salva`; files adapted from Ohman say so.
 - **Nothing private in the repository:** no serial numbers, product SKU, PC name, Windows user paths, emails or personal settings. Commits use the GitHub no-reply address.

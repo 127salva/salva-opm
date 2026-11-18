@@ -47,7 +47,9 @@ IPowerSource / IPowerModeSetter ─► real      │  simulated
 ```
 The Engine never touches WMI, drivers or Windows directly; everything goes through an interface with a simulated twin, so the whole engine runs in the self-checks.
 
-## Timing (Engine.Tick, called every 5 s on the UI thread)
+## Timing (Engine.Tick, posted every 5 s to the hardware thread)
+All hardware work (every `Engine` call, the charger read, the identity check) runs as a job on one background thread (`HardwareThread`, `App.cs`), inside `lock (engine)`. The window thread only posts jobs and reads the engine with `Monitor.TryEnter`, so it never waits for a WMI call; a click shows the new choice at once, and fast clicks collapse into the last one.
+
 | Every | Work |
 |---|---|
 | 2 s (window open) | read fan speeds for the window (a read; it does not keep host state alive) |
