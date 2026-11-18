@@ -133,6 +133,7 @@ namespace SalvaOPM
         private readonly Stopwatch _clock = Stopwatch.StartNew();
         private readonly NotifyIcon _tray = new NotifyIcon();
         private readonly ContextMenuStrip _menu = new ContextMenuStrip();
+        private int _menuClosedAt = Environment.TickCount - 60000;
         private readonly System.Windows.Forms.Timer _tick = new System.Windows.Forms.Timer();
         private readonly System.Windows.Forms.Timer _retry = new System.Windows.Forms.Timer();
         private readonly PowerWatcher _watcher;
@@ -188,7 +189,13 @@ namespace SalvaOPM
             int textW = 0;
             foreach (ToolStripItem item in _menu.Items) if (item is ToolStripMenuItem) textW = Math.Max(textW, Th.Measure(item.Text, Th.Small).Width);
             foreach (ToolStripItem item in _menu.Items) if (item is ToolStripMenuItem) { item.AutoSize = false; item.Size = new Size(textW + Th.D(40), Th.D(28)); }
-            _menu.Opening += delegate { Th.RoundCorners(_menu.Handle); };
+            // a right-click on the icon while the menu is open closes it (the click itself closes it; do not reopen it at once)
+            _menu.Closed += delegate { _menuClosedAt = Environment.TickCount; };
+            _menu.Opening += delegate(object s, System.ComponentModel.CancelEventArgs e)
+            {
+                if (unchecked(Environment.TickCount - _menuClosedAt) < 400) { e.Cancel = true; return; }
+                Th.RoundCorners(_menu.Handle, Th.GridH);
+            };
             _tray.ContextMenuStrip = _menu;
 
             _watcher = new PowerWatcher();

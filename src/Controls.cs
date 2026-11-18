@@ -44,11 +44,20 @@ namespace SalvaOPM
         [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
 
-        /// <summary>Rounded window corners on Windows 11 (DWMWA_WINDOW_CORNER_PREFERENCE = DWMWCP_ROUND); ignored before.</summary>
-        public static void RoundCorners(IntPtr handle)
+        /// <summary>True once Windows has rounded a window for us (Windows 11): it then draws the border too.</summary>
+        public static bool RoundedByWindows;
+
+        /// <summary>Rounded window corners on Windows 11 (DWMWA_WINDOW_CORNER_PREFERENCE = DWMWCP_ROUND) with Windows' own
+        /// border in the given colour (DWMWA_BORDER_COLOR); on Windows 10 both calls fail and nothing changes.</summary>
+        public static void RoundCorners(IntPtr handle, Color border)
         {
-            int round = 2;
-            try { DwmSetWindowAttribute(handle, 33, ref round, 4); } catch (Exception) { }
+            int round = 2, colour = border.R | (border.G << 8) | (border.B << 16);
+            try
+            {
+                RoundedByWindows = DwmSetWindowAttribute(handle, 33, ref round, 4) == 0;
+                if (RoundedByWindows) DwmSetWindowAttribute(handle, 34, ref colour, 4);
+            }
+            catch (Exception) { RoundedByWindows = false; }
         }
 
         /// <summary>The one radius scale (96 DPI units): small pills and inner focus rings, switch cells, every surface.</summary>
@@ -195,6 +204,7 @@ namespace SalvaOPM
 
         protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
         {
+            if (Th.RoundedByWindows) return;   // Windows 11 draws the rounded border itself (a square one would be cut at the corners)
             using (Pen p = new Pen(Th.GridH)) e.Graphics.DrawRectangle(p, 0, 0, e.ToolStrip.Width - 1, e.ToolStrip.Height - 1);
         }
 
