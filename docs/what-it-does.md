@@ -1,4 +1,4 @@
-# Salva OPM 2.5.0: what it does (and doesn't)
+﻿# Salva OPM 2.5.0: what it does (and doesn't)
 
 Everything Salva OPM touches on the HP OMEN 16-ap0 with board 8E35. Source: `src/` (plain C#, built by `build.cmd` with Windows' own compiler). The one file to run is `dist\SalvaOPM-Setup.exe`. The app works offline; the setup needs internet once, only if PawnIO is missing or older than 2.2.0.
 
@@ -9,7 +9,7 @@ One page:
 - **Header:** the logo, the name and the version; on the right a status pill: "Starting…" until start-up is done, then green "All good" or the current warning (amber; red for the thermal guard or the fail safe). With a warning an "i" appears; hovering the pill shows the whole warning and what to do.
 - **Mode cards:** Eco, Balanced, Performance, each with an icon; the active one has a red border. "Eco (auto)" when the app chose Eco itself. Performance is greyed out on battery or with a charger below the laptop's requirement.
 - **CPU and GPU panels:** the temperature (amber from 85 °C, red from 95 °C; "asleep" for a sleeping GPU), the fan speed as a ring (full at 4800 rpm; read every 2 s while the window is open) and a graph of the last 5 minutes (kept while the window is closed; a sleeping GPU leaves a gap; "Collecting…" until there are two readings). Hovering the graph shows the temperature and age of the point under the mouse.
-- **Fan switch:** Auto | Firmware in Eco and Balanced; Auto | Custom | Firmware in Performance. Each mode remembers its own choice.
+- **Fan switch:** Firmware | Auto in Eco and Balanced; Firmware | Auto | Custom in Performance. Each mode remembers its own choice.
 - **Curve:** the curve in use. Custom has 7 points at 60–90 °C that drag up and down (Shift-drag moves the whole curve); the point under the mouse shows its percentage of top speed.
 - **Keyboard:** Tab moves between the mode cards, the fan switch and an editable curve (a white ring shows where); arrow keys pick, Enter or Space applies; on the curve Left/Right pick a point and Up/Down move it (Shift: the whole curve).
 
@@ -21,7 +21,7 @@ Closing the window keeps the app in the tray. The tray diamond shows the mode (g
 | BIOS thermal profile | `0x30` | `0x30` | `0x04` (OGH's Unleashed) |
 | CPU power | firmware default | firmware default | PL1/PL2 80 W, concurrent TDP 82 W |
 | GPU preset [cTGP, PPAB, dState, temp target] | Base `0,0,1,75` | Boost `0,1,1,87` | Max `1,1,1,87` |
-| Fans (charger in) | Auto or Firmware | Auto or Firmware | Auto, Custom or Firmware |
+| Fans (charger in) | Firmware or Auto | Firmware or Auto | Firmware, Auto or Custom |
 | Windows power mode | Best power efficiency | Balanced | Best performance |
 
 **Power rules:**

@@ -68,8 +68,8 @@ namespace SalvaOPM
     {
         [DllImport("dwmapi.dll")] private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
 
-        // the fan switch: Auto | Firmware in Eco and Balanced, Auto | Custom | Firmware in Performance
-        private static readonly FanSource[] TwoWay = { FanSource.Auto, FanSource.Firmware }, ThreeWay = { FanSource.Auto, FanSource.Custom, FanSource.Firmware };
+        // the fan switch: Firmware | Auto in Eco and Balanced, Firmware | Auto | Custom in Performance
+        private static readonly FanSource[] TwoWay = { FanSource.Firmware, FanSource.Auto }, ThreeWay = { FanSource.Firmware, FanSource.Auto, FanSource.Custom };
         private FanSource[] _fanChoices = TwoWay;
 
         private readonly App _app;
