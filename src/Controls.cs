@@ -232,7 +232,38 @@ namespace SalvaOPM
         public double[] History = new double[0];
         public int HistoryCapacity = 60;
         public string HistoryLabel = "";
+        public int SecondsPerPoint = 5;
+        public string GapText = "--";          // shown when hovering a gap ("asleep" for the GPU)
         private const double GraphMin = 30, GraphMax = 100;
+        private int _hover = -1;               // history index under the mouse
+
+        /// <summary>"now", "35 s ago", "3 min 20 s ago": the age of point index of count.</summary>
+        public static string AgeText(int index, int count, int secondsPerPoint)
+        {
+            int s = (count - 1 - index) * secondsPerPoint;
+            if (s <= 0) return "now";
+            if (s < 60) return s + " s ago";
+            return s / 60 + " min" + (s % 60 == 0 ? "" : " " + s % 60 + " s") + " ago";
+        }
+
+        private void Graph(out float x0, out float x1, out float y0, out float y1)
+        {
+            x0 = Th.D(140); x1 = Width - Th.D(16); y0 = Th.D(66); y1 = Height - Th.D(32);
+        }
+
+        private float Step(float x0, float x1) { return (x1 - x0) / Math.Max(1, HistoryCapacity - 1); }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            float x0, x1, y0, y1;
+            Graph(out x0, out x1, out y0, out y1);
+            int n = History.Length, h = -1;
+            if (n > 0 && e.X >= x0 - Th.D(6) && e.X <= x1 + Th.D(6) && e.Y >= y0 - Th.D(20) && e.Y <= y1 + Th.D(6))
+                h = Math.Max(0, Math.Min(n - 1, n - 1 - (int)Math.Round((x1 - e.X) / Step(x0, x1))));
+            if (h != _hover) { _hover = h; Invalidate(); }
+        }
+
+        protected override void OnMouseLeave(EventArgs e) { if (_hover >= 0) { _hover = -1; Invalidate(); } }
 
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -261,7 +292,8 @@ namespace SalvaOPM
             Th.TextCenter(g, "rpm", Th.Small, Th.Sub, new Rectangle((int)(cx - rad), (int)(cy + Th.D(4)), box, Th.D(18)));
 
             // temperature graph, newest point at the right edge
-            float x0 = Th.D(140), x1 = Width - Th.D(16), y0 = Th.D(66), y1 = Height - Th.D(32);
+            float x0, x1, y0, y1;
+            Graph(out x0, out x1, out y0, out y1);
             using (Pen gv = new Pen(Th.GridV, 1))
                 foreach (double v in new double[] { 40, 60, 80, 100 })
                 {
@@ -270,7 +302,7 @@ namespace SalvaOPM
                 }
             Th.Text(g, HistoryLabel, Th.Small, Th.Axis, (int)x0, (int)y1 + Th.D(6));
             Th.TextRight(g, "now", Th.Small, Th.Axis, (int)x1, (int)y1 + Th.D(6));
-            float step = (x1 - x0) / Math.Max(1, HistoryCapacity - 1);
+            float step = Step(x0, x1);
             int n = History.Length, start = 0;
             while (start < n)
             {
@@ -280,6 +312,28 @@ namespace SalvaOPM
                 if (end - start >= 2) DrawRun(g, start, end, n, step, x1, y0, y1);
                 start = end;
             }
+            if (_hover >= 0 && _hover < n) DrawHover(g, n, step, x0, x1, y0, y1);
+        }
+
+        /// <summary>The point under the mouse: a vertical line, a dot on the curve and a pill with its temperature and age.</summary>
+        private void DrawHover(Graphics g, int n, float step, float x0, float x1, float y0, float y1)
+        {
+            double t = History[_hover];
+            float x = x1 - (n - 1 - _hover) * step, dy = double.IsNaN(t) ? y1 : Gy(t, y0, y1);
+            using (Pen v = new Pen(Th.Axis, 1)) g.DrawLine(v, x, y0, x, y1);
+            if (!double.IsNaN(t))
+            {
+                float r = Th.D(4.5);
+                using (SolidBrush bg = new SolidBrush(Th.Sunken)) g.FillEllipse(bg, x - r, dy - r, 2 * r, 2 * r);
+                using (Pen ring = new Pen(Th.Accent, Th.D(2))) g.DrawEllipse(ring, x - r, dy - r, 2 * r, 2 * r);
+            }
+            string label = (double.IsNaN(t) ? GapText : ((int)Math.Round(t)) + " °C") + " · " + AgeText(_hover, n, SecondsPerPoint);
+            Size ls = Th.Measure(label, Th.Mono);
+            float pw = ls.Width + Th.D(14), ph = Th.D(18);
+            float px = Math.Max(x0, Math.Min(x1 - pw, x - pw / 2)), py = dy - Th.D(12) - ph;
+            if (py < y0 - Th.D(2)) py = dy + Th.D(12);   // no room above (a hot point): put it under the dot
+            Th.Fill(g, Th.PillBg, new RectangleF(px, py, pw, ph), Th.D(5));
+            Th.Text(g, label, Th.Mono, Th.TextB, (int)(px + Th.D(7)), (int)(py + (ph - ls.Height) / 2f));
         }
 
         private static float Gy(double t, float y0, float y1)

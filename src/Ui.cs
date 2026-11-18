@@ -76,6 +76,8 @@ namespace SalvaOPM
             _cpu.HistoryLabel = _gpu.HistoryLabel = (app.CpuHistory.Capacity * Engine.TickMs / 60000) + " min";
             _cpu.HistoryCapacity = app.CpuHistory.Capacity;
             _gpu.HistoryCapacity = app.GpuHistory.Capacity;
+            _cpu.SecondsPerPoint = _gpu.SecondsPerPoint = (int)(Engine.TickMs / 1000);
+            _gpu.GapText = "asleep";
             _cpu.SetBounds(Th.D(20), Th.D(176), Th.D(352), Th.D(200));
             _gpu.SetBounds(Th.D(388), Th.D(176), Th.D(352), Th.D(200));
             _fan.Picked += delegate(int i) { E.SetFanMode(i == 1, _app.Now()); };

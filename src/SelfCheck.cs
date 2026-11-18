@@ -807,6 +807,8 @@ namespace SalvaOPM
             double[] v = h.Values();
             Check(empty && v.Length == 3 && double.IsNaN(v[0]) && v[1] == 60 && v[2] == 70,
                 "temperature history: oldest first, the oldest point dropped when full, a gap kept as a gap");
+            Check(ChipPanel.AgeText(59, 60, 5) == "now" && ChipPanel.AgeText(52, 60, 5) == "35 s ago" && ChipPanel.AgeText(19, 60, 5) == "3 min 20 s ago"
+                && ChipPanel.AgeText(23, 60, 5) == "3 min ago", "graph hover: the age of a point under the mouse");
         }
     }
 }
