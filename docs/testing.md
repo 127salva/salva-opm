@@ -66,6 +66,9 @@ Status of 2.4.8 (2026-11-18). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` l
 | OMEN Gaming Hub removal | none | 2.0 install; every install logs `OMEN Gaming Hub package is not installed any more` |
 | Without HP's drivers (fresh Windows) | none | H7: everything above worked with `HP Omen Driver` and `HP Application Driver` removed |
 | No NVIDIA driver (`nvml.dll` missing) | "Auto: GPU only (CPU unknown) drives both", "custom: with the GPU asleep or unknown both fans follow the CPU (safe)" | not tried (the driver is always present here) |
+| Firmware work on its own thread: clicks show at once, fast clicks apply only the last, the fan choice goes to the mode it was clicked in | "hardware thread: fast clicks collapse …", "a fan choice for another mode is saved for that mode …" | 2026-11-18 19:44–19:56 and 20:12–20:14: fast mode and fan clicks all applied and verified, clean tray Exit in Performance, wake re-applied |
+| Window 2.5.0: graph hover, a filling graph, ring glide, slide and fade, keyboard | "graph hover: the age …", "graph: the span …", "ring glide …", "window motion …" | looked at by the owner on 2026-11-18; keyboard use not reported yet |
+| Setup right after an uninstall (shows Install, waits for the old folder) | none | 2026-11-18 20:15:16: `install: waited 2 s …`, `installed 2.5.0` at the first try |
 | OMEN key | none | pass on 2.4.0 and in H7 |
 
 ## Adding a check

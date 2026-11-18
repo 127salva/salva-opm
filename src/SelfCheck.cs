@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 127salva
 
 using System;
@@ -537,6 +537,15 @@ namespace SalvaOPM
             Check(r.Core.FirmwareFans && r.Sim.FansByBios, "back to Balanced: Firmware again");
             again = new Rig(new SimFirmware(), r.Dir); again.Core.Boot(true, 0);
             Check(again.Core.FirmwareFans && again.Sim.FansByBios && Count(again.Sim.Log, "type 46", 0) == 0, "the per-mode fan choice survives a restart");
+
+            // a fan choice made for a mode that is not in effect yet (a mode click still waiting) is stored for that mode only
+            r = new Rig(); r.Core.Boot(true, 0);
+            mark = r.Sim.Log.Count;
+            r.Core.SetFanMode(Mode.Performance, FanSource.Firmware, 0);
+            Check(r.St.Fan[(int)Mode.Performance] == FanSource.Firmware && r.Core.FanChoice == FanSource.Auto && Writes(r.Sim.Log, mark) == 0,
+                "a fan choice for another mode is saved for that mode, and nothing is sent");
+            r.Core.Select(Mode.Performance, 0);
+            Check(r.Core.FirmwareFans && r.Sim.FansByBios, "entering that mode then uses the saved choice");
 
             r = new Rig(); r.Core.Boot(true, 0); r.Core.SetFanMode(FanSource.Firmware, 0);
             r.Sens.Cpu = 96; mark = r.Sim.Log.Count;

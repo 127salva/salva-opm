@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 127salva
 // Portions adapted from Ohman (https://github.com/P4R1H/Ohman), GPL-3.0-or-later.
 
@@ -656,8 +656,21 @@ namespace SalvaOPM
 
         /// <summary>The fan choice of the mode in effect: Auto or Firmware in every mode, Custom only in Performance.
         /// Handing the fans over (or back) sends the profile; during a lapse the firmware has them already and nothing is sent.</summary>
-        public void SetFanMode(FanSource source, long now)
+        public void SetFanMode(FanSource source, long now) { SetFanMode(_ctl.Effective, source, now); }
+
+        /// <summary>The fan choice for mode (the mode on screen when it was clicked). For a mode not in effect yet (its mode
+        /// click is still waiting) it is only saved; that mode uses it when applied.</summary>
+        public void SetFanMode(Mode mode, FanSource source, long now)
         {
+            if (mode != _ctl.Effective)
+            {
+                if (MonitorOnly || Halted || (source == FanSource.Custom && mode != Mode.Performance) || _s.Fan[(int)mode] == source) return;
+                _s.Fan[(int)mode] = source;
+                _s.Save();
+                Log(Name(mode) + " fans: " + FanLabels.Of(source).ToLowerInvariant());
+                Fire();
+                return;
+            }
             if (MonitorOnly || Halted) return;
             if (source == FanSource.Custom && _ctl.Effective != Mode.Performance) return;
             if (source == FanChoice) return;

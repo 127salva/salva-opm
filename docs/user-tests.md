@@ -40,7 +40,7 @@ The self-checks run against a simulator. These are the checks only the real lapt
 
 **H3b (what was repeated on 2.4.1, ~10 min):** Performance → Balanced → within 2 min Eco → Balanced → wait 3 min: log shows `chosen while the old limit lapses`, then `host limits lapsed … PL 0/0`. Then Eco → Performance three times: no `drift detected`. Then standby for over a minute and wake: log shows `woke from standby`.
 
-## Release checks for 2.4
+## Release checks (2.4 and later)
 Install first: run `SalvaOPM-Setup.exe` → **Update**. After each check, send `C:\ProgramData\SalvaOPM\log.txt`: every mode change logs temperatures, fan speeds and power limits. Never try to reach 95 °C on purpose: the thermal guard is only observed, not provoked.
 
 | # | Check | How | Pass when |

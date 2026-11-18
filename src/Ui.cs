@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 127salva
 // Portions adapted from Ohman (https://github.com/P4R1H/Ohman), GPL-3.0-or-later.
 
@@ -109,7 +109,7 @@ namespace SalvaOPM
             _gpu.GapText = "asleep";
             _cpu.SetBounds(Th.D(20), Th.D(176), Th.D(352), Th.D(200));
             _gpu.SetBounds(Th.D(388), Th.D(176), Th.D(352), Th.D(200));
-            _fan.Picked += delegate(int i) { if (i < _fanChoices.Length) _app.ChooseFan(_fanChoices[i]); };
+            _fan.Picked += delegate(int i) { if (i < _fanChoices.Length) _app.ChooseFan((Mode)_modes.Index, _fanChoices[i]); };
             _fan.SetBounds(Th.D(20), Th.D(400), Th.D(720), Th.D(44));   // 24 above (new group), 8 to its curve
             _curve.Committed += delegate(int[] levels) { _app.SetCurve(levels); };
             _curve.SetBounds(Th.D(20), Th.D(452), Th.D(720), Th.D(204));
@@ -145,7 +145,7 @@ namespace SalvaOPM
             FanSource? pf = _app.PendingFan;
             if (!pm.HasValue && !pf.HasValue) return;
             Mode shown = pm.HasValue ? pm.Value : (Mode)Math.Max(0, _modes.Index);
-            FanSource fanShown = pf.HasValue ? pf.Value : E.Settings.Fan[(int)shown];
+            FanSource fanShown = pf.HasValue && _app.PendingFanMode == shown ? pf.Value : E.Settings.Fan[(int)shown];
             _modes.Index = (int)shown;
             _fanChoices = shown == Mode.Performance ? ThreeWay : TwoWay;
             _fan.Items = Array.ConvertAll(_fanChoices, delegate(FanSource c) { return FanLabels.Of(c); });
@@ -160,7 +160,7 @@ namespace SalvaOPM
         {
             // a clicked choice shows at once, before the hardware thread has applied it
             Mode shown = _app.PendingMode ?? E.Effective;
-            FanSource fanShown = _app.PendingFan ?? E.Settings.Fan[(int)shown];
+            FanSource fanShown = _app.PendingFan.HasValue && _app.PendingFanMode == shown ? _app.PendingFan.Value : E.Settings.Fan[(int)shown];
             bool mon = E.MonitorOnly, perf = shown == Mode.Performance;
             bool custom = perf && fanShown == FanSource.Custom;
             string fault = _app.Booted ? E.Fault : null, hint = Hints.For(fault);

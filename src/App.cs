@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 127salva
 
 using System;
@@ -126,6 +126,7 @@ namespace SalvaOPM
         /// <summary>A choice clicked but not applied yet: the window shows it at once (null: none waiting).</summary>
         public Mode? PendingMode;
         public FanSource? PendingFan;
+        public Mode PendingFanMode;   // the mode PendingFan was clicked for
         private readonly IPowerSource _power;
         private readonly bool _demo;
         private readonly Logger _log;
@@ -320,15 +321,17 @@ namespace SalvaOPM
             });
         }
 
-        /// <summary>The fan choice of the mode on screen, shown at once and applied on the hardware thread.</summary>
-        public void ChooseFan(FanSource f)
+        /// <summary>The fan choice for the mode on screen (m), shown at once and applied on the hardware thread for that
+        /// mode, even when a mode change is still waiting in front of it.</summary>
+        public void ChooseFan(Mode m, FanSource f)
         {
             PendingFan = f;
+            PendingFanMode = m;
             Refresh();
             Hw.Post("fan", delegate
             {
-                Engine.SetFanMode(f, Now());
-                OnUi(delegate { if (PendingFan == f) PendingFan = null; Refresh(); });
+                Engine.SetFanMode(m, f, Now());
+                OnUi(delegate { if (PendingFan == f && PendingFanMode == m) PendingFan = null; Refresh(); });
             });
         }
 

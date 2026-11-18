@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 127salva
 // Portions adapted from Ohman (https://github.com/P4R1H/Ohman), GPL-3.0-or-later.
 
