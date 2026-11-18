@@ -24,7 +24,7 @@ namespace SalvaOPM
         public static float K = 1f;
         public static int D(double v) { return (int)Math.Round(v * K); }
 
-        public static Font Title, Small, Mono, Seg, SegBold;
+        public static Font Title, Small, Mono, Seg, SegBold, Card, Big;
 
         public static void Init(float scale)
         {
@@ -37,6 +37,65 @@ namespace SalvaOPM
             Mono = new Font(mono, 9.75f);
             Seg = new Font("Segoe UI", 11f);
             SegBold = new Font("Segoe UI Semibold", 11f);
+            Card = new Font("Segoe UI Semibold", 12.5f);
+            Big = new Font("Segoe UI Semibold", 22f);
+        }
+
+        /// <summary>A chip temperature's colour: normal, amber from 85 C (the 85 C rule), red from 95 C (the thermal guard).</summary>
+        public static Color TempColor(double t) { return double.IsNaN(t) ? Sub : t >= 95 ? Accent : t >= 85 ? Warn : TextHi; }
+
+        /// <summary>The logo: the red diamond of the tray icon, centred on (cx, cy).</summary>
+        public static void Diamond(Graphics g, float cx, float cy, float r)
+        {
+            using (LinearGradientBrush b = new LinearGradientBrush(new PointF(cx - r, cy - r), new PointF(cx + r, cy + r), Color.FromArgb(0xF6, 0x7A, 0x7D), Color.FromArgb(0xB8, 0x2A, 0x2E)))
+                g.FillPolygon(b, new PointF[] { new PointF(cx, cy - r), new PointF(cx + r, cy), new PointF(cx, cy + r), new PointF(cx - r, cy) });
+        }
+
+        /// <summary>Line icons drawn in a square box: "leaf" (Eco), "scale" (Balanced), "bolt" (Performance), "chip".</summary>
+        public static void Icon(Graphics g, string kind, RectangleF box, Color c)
+        {
+            float x = box.X, y = box.Y, s = Math.Min(box.Width, box.Height);
+            Func<double, double, PointF> P = delegate(double u, double v) { return new PointF(x + (float)(u * s), y + (float)(v * s)); };
+            using (Pen p = new Pen(c, Math.Max(1.5f, s / 14f)))
+            {
+                p.LineJoin = LineJoin.Round; p.StartCap = p.EndCap = LineCap.Round;
+                if (kind == "leaf")
+                {
+                    using (GraphicsPath leaf = new GraphicsPath())
+                    {
+                        leaf.AddBezier(P(0.18, 0.82), P(0.08, 0.35), P(0.45, 0.10), P(0.90, 0.10));
+                        leaf.AddBezier(P(0.90, 0.10), P(0.88, 0.58), P(0.55, 0.88), P(0.18, 0.82));
+                        g.DrawPath(p, leaf);
+                    }
+                    g.DrawLine(p, P(0.10, 0.92), P(0.62, 0.38));
+                }
+                else if (kind == "scale")
+                {
+                    g.DrawLine(p, P(0.50, 0.12), P(0.50, 0.86));
+                    g.DrawLine(p, P(0.30, 0.88), P(0.70, 0.88));
+                    g.DrawLine(p, P(0.14, 0.26), P(0.86, 0.26));
+                    foreach (double cxp in new double[] { 0.16, 0.84 })
+                    {
+                        g.DrawLine(p, P(cxp, 0.26), P(cxp - 0.12, 0.56));
+                        g.DrawLine(p, P(cxp, 0.26), P(cxp + 0.12, 0.56));
+                        PointF a = P(cxp - 0.14, 0.46);
+                        g.DrawArc(p, a.X, a.Y, 0.28f * s, 0.20f * s, 0, 180);
+                    }
+                }
+                else if (kind == "bolt")
+                    g.DrawPolygon(p, new PointF[] { P(0.58, 0.06), P(0.18, 0.56), P(0.46, 0.56), P(0.38, 0.94), P(0.82, 0.40), P(0.54, 0.40), P(0.64, 0.06) });
+                else if (kind == "chip")
+                {
+                    PointF o = P(0.24, 0.24), i = P(0.40, 0.40);
+                    g.DrawRectangle(p, o.X, o.Y, 0.52f * s, 0.52f * s);
+                    g.DrawRectangle(p, i.X, i.Y, 0.20f * s, 0.20f * s);
+                    foreach (double k in new double[] { 0.38, 0.50, 0.62 })
+                    {
+                        g.DrawLine(p, P(k, 0.08), P(k, 0.24)); g.DrawLine(p, P(k, 0.76), P(k, 0.92));
+                        g.DrawLine(p, P(0.08, k), P(0.24, k)); g.DrawLine(p, P(0.76, k), P(0.92, k));
+                    }
+                }
+            }
         }
 
         private const TextFormatFlags Flags = TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine;
@@ -86,12 +145,19 @@ namespace SalvaOPM
         public bool[] Disabled;
         public int Index;
         public event Action<int> Picked;
+        /// <summary>Card style (the mode switch): one card per item, the icon named in Icons left of the name.</summary>
+        public string[] Icons;
         private int _hover = -1;
-
 
         private RectangleF Cell(int i)
         {
-            float pad = Th.D(6), w = (Width - 2 * pad) / Math.Max(1, Items.Length);
+            int n = Math.Max(1, Items.Length);
+            if (Icons != null)
+            {
+                float gap = Th.D(12), cw = (Width - 1 - gap * (n - 1)) / n;
+                return new RectangleF(i * (cw + gap), 0, cw, Height - 1);
+            }
+            float pad = Th.D(6), w = (Width - 2 * pad) / n;
             return new RectangleF(pad + i * w, pad, w, Height - 2 * pad);
         }
 
@@ -102,6 +168,7 @@ namespace SalvaOPM
             Graphics g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Th.Bg);
+            if (Icons != null) { PaintCards(g); return; }
             Th.Fill(g, Th.Sunken, new RectangleF(0, 0, Width - 1, Height - 1), Th.D(12));
             for (int i = 0; i < Items.Length; i++)
             {
@@ -110,6 +177,25 @@ namespace SalvaOPM
                 else if (i == _hover && !IsDisabled(i)) Th.Fill(g, Th.Hover, r, Th.D(9));
                 Color c = i == Index ? Color.White : IsDisabled(i) ? Th.Section : i == _hover ? Th.TextB : Th.SegText;
                 Th.TextCenter(g, Items[i], i == Index ? Th.SegBold : Th.Seg, c, Rectangle.Round(r));
+            }
+        }
+
+        private void PaintCards(Graphics g)
+        {
+            for (int i = 0; i < Items.Length; i++)
+            {
+                RectangleF r = Cell(i);
+                bool on = i == Index, off = IsDisabled(i);
+                Th.Fill(g, on ? Color.FromArgb(0x2A, 0x19, 0x18) : i == _hover && !off ? Th.Hover : Th.Sunken, r, Th.D(12));
+                if (on)
+                    using (Pen b = new Pen(off ? Th.Off : Th.Accent, Th.D(2)))
+                    using (GraphicsPath p = Th.Round(new RectangleF(r.X + 1, r.Y + 1, r.Width - 2, r.Height - 2), Th.D(12)))
+                        g.DrawPath(b, p);
+                Color c = off ? Th.Section : on ? Th.TextHi : i == _hover ? Th.TextB : Th.SegText;
+                float s = Th.D(30);
+                Th.Icon(g, Icons[i], new RectangleF(r.X + Th.D(22), r.Y + (r.Height - s) / 2, s, s), off ? Th.Section : on ? Th.Accent : Th.SegText);
+                Size ts = Th.Measure(Items[i], Th.Card);
+                Th.Text(g, Items[i], Th.Card, c, (int)(r.X + Th.D(66)), (int)(r.Y + (r.Height - ts.Height) / 2));
             }
         }
 
@@ -132,6 +218,110 @@ namespace SalvaOPM
             if (i < 0 || i == Index || IsDisabled(i)) return;
             Action<int> h = Picked;
             if (h != null) h(i);
+        }
+    }
+
+    /// <summary>One chip's panel: name, temperature, a ring gauge of its fan speed and a graph of the last minutes.</summary>
+    public sealed class ChipPanel : Ctl
+    {
+        public string Title = "";
+        public double Temp = double.NaN;
+        public bool Asleep;
+        public int Rpm = -1;                   // -1 = no recent reading
+        public int MaxRpm = HpBios.FanMax * 100;
+        public double[] History = new double[0];
+        public int HistoryCapacity = 60;
+        public string HistoryLabel = "";
+        private const double GraphMin = 30, GraphMax = 100;
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.Clear(Th.Bg);
+            Th.Fill(g, Th.Sunken, new RectangleF(0, 0, Width - 1, Height - 1), Th.D(14));
+            Th.Icon(g, "chip", new RectangleF(Th.D(16), Th.D(14), Th.D(26), Th.D(26)), Th.Accent);
+            Th.Text(g, Title, Th.Card, Th.TextHi, Th.D(50), Th.D(15));
+            string t = Asleep ? "asleep" : double.IsNaN(Temp) ? "--" : ((int)Math.Round(Temp)) + " °C";
+            Th.TextRight(g, t, Asleep ? Th.Seg : Th.Big, Asleep ? Th.Sub : Th.TempColor(Temp), Width - Th.D(16), Asleep ? Th.D(16) : Th.D(6));
+
+            // ring gauge: fan speed against the top of the fan table
+            float cx = Th.D(72), cy = Th.D(124), rad = Th.D(46), w = Th.D(9);
+            RectangleF ring = new RectangleF(cx - rad, cy - rad, 2 * rad, 2 * rad);
+            using (Pen bg = new Pen(Th.GridH, w)) g.DrawEllipse(bg, ring);
+            if (Rpm > 0)
+                using (Pen fg = new Pen(Th.Accent, w))
+                {
+                    fg.StartCap = fg.EndCap = LineCap.Round;
+                    g.DrawArc(fg, ring, -90, 360f * Math.Min(Rpm, MaxRpm) / MaxRpm);
+                }
+            string rpm = Rpm >= 0 ? Rpm.ToString() : "--";
+            Size rs = Th.Measure(rpm, Th.Title), us = Th.Measure("rpm", Th.Small);
+            Th.Text(g, rpm, Th.Title, Th.TextHi, (int)(cx - rs.Width / 2f), (int)(cy - rs.Height + Th.D(4)));
+            Th.Text(g, "rpm", Th.Small, Th.Sub, (int)(cx - us.Width / 2f), (int)(cy + Th.D(4)));
+
+            // temperature graph, newest point at the right edge
+            float x0 = Th.D(140), x1 = Width - Th.D(16), y0 = Th.D(66), y1 = Height - Th.D(32);
+            using (Pen gv = new Pen(Th.GridV, 1))
+                foreach (double v in new double[] { 40, 60, 80, 100 })
+                {
+                    float gy = Gy(v, y0, y1);
+                    g.DrawLine(gv, x0, gy, x1, gy);
+                }
+            Th.Text(g, HistoryLabel, Th.Small, Th.Axis, (int)x0, (int)y1 + Th.D(6));
+            Th.TextRight(g, "now", Th.Small, Th.Axis, (int)x1, (int)y1 + Th.D(6));
+            float step = (x1 - x0) / Math.Max(1, HistoryCapacity - 1);
+            int n = History.Length, start = 0;
+            while (start < n)
+            {
+                while (start < n && double.IsNaN(History[start])) start++;
+                int end = start;
+                while (end < n && !double.IsNaN(History[end])) end++;
+                if (end - start >= 2) DrawRun(g, start, end, n, step, x1, y0, y1);
+                start = end;
+            }
+        }
+
+        private static float Gy(double t, float y0, float y1)
+        {
+            double k = (Math.Max(GraphMin, Math.Min(GraphMax, t)) - GraphMin) / (GraphMax - GraphMin);
+            return (float)(y1 - k * (y1 - y0));
+        }
+
+        /// <summary>One unbroken stretch of readings (a sleeping GPU leaves a gap).</summary>
+        private void DrawRun(Graphics g, int start, int end, int n, float step, float x1, float y0, float y1)
+        {
+            PointF[] pts = new PointF[end - start];
+            for (int i = start; i < end; i++) pts[i - start] = new PointF(x1 - (n - 1 - i) * step, Gy(History[i], y0, y1));
+            using (GraphicsPath fill = new GraphicsPath())
+            {
+                fill.AddLine(pts[0].X, y1, pts[0].X, pts[0].Y);
+                fill.AddLines(pts);
+                fill.AddLine(pts[pts.Length - 1].X, pts[pts.Length - 1].Y, pts[pts.Length - 1].X, y1);
+                fill.CloseFigure();
+                using (SolidBrush b = new SolidBrush(Color.FromArgb(0x26, Th.Accent))) g.FillPath(b, fill);
+            }
+            using (Pen line = new Pen(Th.Accent, Th.D(2))) { line.LineJoin = LineJoin.Round; g.DrawLines(line, pts); }
+        }
+    }
+
+    /// <summary>The header's status: a pill with a coloured dot and one line (the full text is the control's tooltip).</summary>
+    public sealed class StatusPill : Ctl
+    {
+        public Color Dot = Th.Ok;
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.Clear(Th.Bg);
+            float pad = Th.D(14), dot = Th.D(9);
+            float w = Math.Min(Width - 1, Th.Measure(Text, Th.Small).Width + 2 * pad + dot + Th.D(8));
+            RectangleF r = new RectangleF(Width - 1 - w, 0, w, Height - 1);
+            Th.Fill(g, Th.PillBg, r, r.Height / 2);
+            using (SolidBrush b = new SolidBrush(Dot)) g.FillEllipse(b, r.X + pad, r.Y + (r.Height - dot) / 2, dot, dot);
+            Rectangle tr = Rectangle.Round(new RectangleF(r.X + pad + dot + Th.D(8), r.Y, r.Right - pad - (r.X + pad + dot + Th.D(8)), r.Height));
+            TextRenderer.DrawText(g, Text, Th.Small, tr, Th.TextB, TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter);
         }
     }
 
@@ -165,6 +355,7 @@ namespace SalvaOPM
             Graphics g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Th.Bg);
+            Th.Fill(g, Th.Sunken, new RectangleF(0, 0, Width - 1, Height - 1), Th.D(14));
             using (Pen gh = new Pen(Th.GridH, 1))
                 foreach (int pct in new int[] { 100, 75, 50, 25, 0 })
                 {
@@ -199,7 +390,7 @@ namespace SalvaOPM
             }
             if (ReadOnly) return;
             using (Pen ring = new Pen(Th.Accent, Th.D(2.5)))
-            using (SolidBrush bg = new SolidBrush(Th.Bg))
+            using (SolidBrush bg = new SolidBrush(Th.Sunken))
                 for (int i = 0; i < pts.Length; i++)
                 {
                     float r = Th.D(i == _drag || i == _hover ? 6 : 4.5);

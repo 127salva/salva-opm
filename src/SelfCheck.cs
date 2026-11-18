@@ -800,6 +800,13 @@ namespace SalvaOPM
                 && Settings.ParseCurve("18,20,21,29,30,31,32") == null && Settings.ParseCurve("19,20,21,29,30,31,48") != null, "curve parse: 7 rising levels inside 19..48");
             Check(Same(Settings.ParseCurve("19,24,24,24,39,48,48"), new int[] { 19, 24, 24, 29, 39, 48, 48 }) && Same(Settings.ParseCurve("19,19,19,19,19,19,19"), FanCurve.CustomFloor),
                 "a curve saved by an older build is raised to OGH's lower bound, not thrown away");
+
+            TempHistory h = new TempHistory(3);
+            bool empty = h.Values().Length == 0;
+            h.Add(50); h.Add(double.NaN); h.Add(60); h.Add(70);
+            double[] v = h.Values();
+            Check(empty && v.Length == 3 && double.IsNaN(v[0]) && v[1] == 60 && v[2] == 70,
+                "temperature history: oldest first, the oldest point dropped when full, a gap kept as a gap");
         }
     }
 }

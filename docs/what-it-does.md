@@ -1,4 +1,4 @@
-# Salva OPM 2.4.8: what it does (and doesn't)
+# Salva OPM 2.5.0: what it does (and doesn't)
 
 Everything Salva OPM touches on the HP OMEN 16-ap0 with board 8E35. Source: `src/` (plain C#, built by `build.cmd` with Windows' own compiler). The one file to run is `dist\SalvaOPM-Setup.exe`. The app works offline; the setup needs internet once, only if PawnIO is missing or older than 2.2.0.
 
@@ -6,11 +6,11 @@ Its logic follows Ohman (github.com/P4R1H/Ohman, GPL-3.0), except the Auto fan c
 
 ## The window
 One page:
-- **Mode switch:** Eco | Balanced | Performance. Performance is greyed out on battery or with a charger below the laptop's requirement.
+- **Header:** the logo, the name and the version; on the right a status pill: green "All good", or the current warning (amber; red for the thermal guard or the fail safe). Hovering it shows the whole text.
+- **Mode cards:** Eco, Balanced, Performance, each with an icon; the active one has a red border. "Eco (auto)" when the app chose Eco itself. Performance is greyed out on battery or with a charger below the laptop's requirement.
+- **CPU and GPU panels:** the temperature (amber from 85 °C, red from 95 °C; "asleep" for a sleeping GPU), the fan speed as a ring (full at 4800 rpm) and a graph of the last 5 minutes (kept while the window is closed; a sleeping GPU leaves a gap).
 - **Fan switch:** Auto alone in Eco and Balanced; Auto | Custom in Performance.
 - **Curve:** the curve in use. Custom has 7 points at 60–90 °C that drag up and down (Shift-drag moves the whole curve); the point under the mouse shows its percentage of top speed.
-- **Info line:** CPU and GPU temperature and fan speeds on the left, the version on the right.
-- **Warning line:** amber, above the curve, only when something is wrong.
 
 Closing the window keeps the app in the tray. The tray diamond shows the mode (green Eco, grey Balanced, red Performance); hovering it shows temperatures and fan speeds, or the current warning when there is one. Right-click: Open, the three modes, Exit. The OMEN key opens and hides the window.
 

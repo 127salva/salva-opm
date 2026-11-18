@@ -15,8 +15,8 @@ One Windows process, one thread for all hardware work. The app never uses the ne
 ```
 Program.cs       entry point, command switches, Logger, Preflight (--check), Tools (--read, --dry-run)
 App.cs           the running app: tray icon, 5 s timer, power events, OMEN key, window lifetime; Identity check
-Ui.cs            MainForm: the one-page window
-Controls.cs      Th (theme), Seg (segmented switch), CurveView (curve editor)
+Ui.cs            MainForm: the one-page window; TempHistory (the graphs' last 5 minutes)
+Controls.cs      Th (theme, drawn icons), Seg (switch and mode cards), ChipPanel, StatusPill, CurveView (curve editor)
 Setup.cs         install / update / uninstall and the setup window
 Ogh.cs           Tasks (Task Scheduler COM), Ogh (OMEN Gaming Hub removal)
 

@@ -42,6 +42,8 @@ namespace SalvaOPM
 
         public readonly Engine Engine;
         public readonly Icon AppIcon;
+        /// <summary>The window's graphs: 5 minutes of 5 s readings, kept while the window is closed.</summary>
+        public readonly TempHistory CpuHistory = new TempHistory(60), GpuHistory = new TempHistory(60);
         private readonly IPowerSource _power;
         private readonly bool _demo;
         private readonly Logger _log;
@@ -108,7 +110,12 @@ namespace SalvaOPM
                     OnPower(true);
                 }
                 _lastTickWall = wall;
-                if (_booted) Engine.Tick(Now());
+                if (_booted)
+                {
+                    Engine.Tick(Now());
+                    CpuHistory.Add(Engine.Sensors.CpuTemp);
+                    GpuHistory.Add(Engine.Sensors.GpuAsleep ? double.NaN : Engine.Sensors.GpuTemp);
+                }
                 // WMI leaves a few handles per BIOS call until .NET cleans up; with so little allocation that can take long
                 if (++_ticks % 60 == 0) { GC.Collect(); GC.WaitForPendingFinalizers(); }
             };

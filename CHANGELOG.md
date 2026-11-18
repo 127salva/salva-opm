@@ -2,6 +2,10 @@
 
 Versions are major.minor.patch; `CONTRIBUTING.md` says how each number was used. Dates are when the build was made.
 
+## 2.5.0 - 2026-11-18
+### Changed
+- New window, larger and fixed in size: a header with the version and a status pill (green "All good", or the warning); the modes as cards with icons; a panel per chip with its temperature, its fan speed as a ring and a graph of the last 5 minutes; the fan switch and curve restyled. Same behaviour, same firmware calls. The amber warning line and the bottom info line are gone (the pill and the panels show them).
+
 ## 2.4.8 - 2026-11-18
 ### Fixed
 - A mode chosen from the tray before start-up finished (the laptop's identity still unread, e.g. WMI not ready at logon) was written to the firmware. Mode choices made before start-up is done are now ignored, with a tray message to try again.

@@ -28,7 +28,7 @@ namespace SalvaOPM
     public static class Setup
     {
         public const string TaskName = "SalvaOPM";
-        public const string Version = "2.4.8";
+        public const string Version = "2.5.0";
         public const string PawnIoUrl = "https://github.com/namazso/PawnIO.Setup/releases/download/2.2.0/PawnIO_setup.exe";
         public const string PawnIoSha256 = "1F519A22E47187F70A1379A48CA604981C4FCF694F4E65B734AAA74A9FBA3032";
         private const string UninstallKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\SalvaOPM";
@@ -456,9 +456,7 @@ namespace SalvaOPM
             Graphics g = e.Graphics;
             g.Clear(Th.Bg);
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            float cx = Th.D(44), cy = Th.D(44), r = Th.D(16);
-            using (LinearGradientBrush b = new LinearGradientBrush(new PointF(cx - r, cy - r), new PointF(cx + r, cy + r), Color.FromArgb(0xF6, 0x7A, 0x7D), Color.FromArgb(0xB8, 0x2A, 0x2E)))
-                g.FillPolygon(b, new PointF[] { new PointF(cx, cy - r), new PointF(cx + r, cy), new PointF(cx, cy + r), new PointF(cx - r, cy) });
+            Th.Diamond(g, Th.D(44), Th.D(44), Th.D(16));
             Th.Text(g, "Salva OPM", Th.Title, Th.TextHi, Th.D(72), Th.D(30));
             Th.TextRight(g, "v" + Setup.Version, Th.Mono, Th.Sub, Th.D(432), Th.D(36));
             int y = Th.D(88);
