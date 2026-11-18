@@ -24,7 +24,7 @@
 
 ## Commits and versions
 - Short imperative subject; explain the why in the body when it is not obvious.
-- Versions are `major.minor.patch` (`Setup.Version`). So far a redesign raised the major number (2.0), larger behaviour changes the minor number (2.1 to 2.5), and fixes and small changes the patch number (2.4.1 to 2.4.8). Releases are tagged `vX.Y.Z`.
+- Versions are `major.minor.patch` (`Setup.Version`). So far a redesign raised the major number (2.0), larger behaviour changes the minor number (2.1 to 2.5), and fixes and small changes the patch number (2.4.1 to 2.4.8, 2.5.1). Releases are tagged `vX.Y.Z`.
 
 ## Testing on the laptop
 Changes that affect what is sent to the firmware should be run on the hardware before release; `docs/user-tests.md` lists the checks. Say in the pull request what was run.

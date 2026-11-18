@@ -177,10 +177,6 @@ namespace SalvaOPM
             ContextMenu menu = new ContextMenu();
             menu.MenuItems.Add("Open Salva OPM", delegate { ShowWindow(); });
             menu.MenuItems.Add("-");
-            menu.MenuItems.Add("Eco", delegate { Choose(Mode.Eco); });
-            menu.MenuItems.Add("Balanced", delegate { Choose(Mode.Balanced); });
-            menu.MenuItems.Add("Performance", delegate { Choose(Mode.Performance); });
-            menu.MenuItems.Add("-");
             menu.MenuItems.Add("Exit", delegate { Exit(); });
             _tray.ContextMenu = menu;
 

@@ -2,6 +2,10 @@
 
 Versions are major.minor.patch; `CONTRIBUTING.md` says how each number was used. Dates are when the build was made.
 
+## 2.5.1 - 2026-11-18
+### Changed
+- The tray menu no longer changes modes: right-click gives Open and Exit; modes are chosen in the window.
+
 ## 2.5.0 - 2026-11-18
 ### Added
 - Fan choice **Firmware** in every mode, remembered per mode: the firmware's own curve drives the fans, with no 85 °C rule and no thermal guard from the app. The choices are Firmware | Recommended (the quiet Auto curve, renamed) | Custom (Performance only).

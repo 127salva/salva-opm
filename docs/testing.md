@@ -37,7 +37,7 @@ The simulator (`SimFirmware`) encodes behaviour measured on the laptop: concurre
 | Other BIOS versions | none: only `F.13` is validated; the app warns on any other |
 
 ## Every feature: how it is checked
-Status of 2.5.0 (2026-11-18). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` lines recorded in `docs/user-tests.md` and `docs/hardware/evidence.md`. Self-check names are quoted from `src/SelfCheck.cs`.
+Status of 2.5.1 (2026-11-18). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` lines recorded in `docs/user-tests.md` and `docs/hardware/evidence.md`. Self-check names are quoted from `src/SelfCheck.cs`.
 
 | Feature | Self-checks | On the laptop |
 |---|---|---|
