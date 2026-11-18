@@ -2,13 +2,10 @@
 
 Versions are major.minor.patch; `CONTRIBUTING.md` says how each number was used. Dates are when the build was made.
 
-## 2.5.2 - 2026-11-18
-### Changed
-- The tray menu is a small dark menu in the window's colours (no empty icon column, rounded corners on Windows 11), instead of the light grey Windows menu. A right-click on the tray icon while the menu is open closes it.
-
 ## 2.5.1 - 2026-11-18
 ### Changed
 - The tray menu no longer changes modes: right-click gives Open and Exit; modes are chosen in the window.
+- The tray menu is a small dark menu in the window's colours (no empty icon column, rounded corners on Windows 11), instead of the light grey Windows menu. A right-click on the tray icon while the menu is open closes it.
 
 ## 2.5.0 - 2026-11-18
 ### Added

@@ -2,7 +2,7 @@
 
 A Windows tray app that replaces OMEN Gaming Hub's performance control on one laptop, the HP OMEN 16-ap0 with board 8E35 (validated BIOS F.13). It writes to the laptop's firmware. Start with `README.md`, then `docs/what-it-does.md`.
 
-## Where it stands (2.5.2, 2026-11-18)
+## Where it stands (2.5.1, 2026-11-18)
 - Feature-complete for its owner. Every check in `docs/user-tests.md` (H1–H7) passed on the laptop; H8 (a fresh Windows install) is not done yet: planned for the owner's next clean Windows install. H9 (the Firmware fan choice of 2.5.0) passed on 2026-11-18, and so did the 2.5.0 window and hardware-thread checks (results table in `docs/user-tests.md`).
 - `build.cmd`: 205 self-checks, 0 failures.
 - The table "Every feature: how it is checked" in `docs/testing.md` shows, for each feature, whether it was seen on the laptop, only in the simulator, or never.
