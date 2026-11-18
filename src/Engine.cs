@@ -81,7 +81,7 @@ namespace SalvaOPM
         public bool OnAc { get { return _onAc; } }
         public int[] Levels { get { return new int[] { _lvlCpu, _lvlGpu }; } }
         public FanCurve AutoCurve { get { return _auto; } }
-        /// <summary>True while the custom curve drives the fans: only Performance can use it; Eco and Balanced are always Auto.</summary>
+        /// <summary>True while the custom curve drives the fans: only Performance can use it (Eco and Balanced choose Recommended or Firmware).</summary>
         public bool CustomFans { get { return _ctl.Effective == Mode.Performance && FanChoice == FanSource.Custom; } }
         /// <summary>The fan choice of the mode in effect (each mode remembers its own).</summary>
         public FanSource FanChoice { get { return _s.Fan[(int)_ctl.Effective]; } }

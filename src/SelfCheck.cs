@@ -494,7 +494,7 @@ namespace SalvaOPM
             now = RunFor(r, now, 30000);
             Check(!r.Core.Push.Active && r.Sim.HeldCpu < 48, "under 80 C again: back to the curve");
 
-            // ---- the fan choice: Eco and Balanced are always Auto; Performance may use the one custom curve
+            // ---- the fan choice: Custom only in Performance (Eco and Balanced: Recommended or Firmware), the one custom curve
             r = new Rig(); r.Core.Boot(true, 0);
             r.Sens.Cpu = 85;
             now = RunFor(r, 0, 5000);                     // the engine reads temperatures on its 5 s tick
