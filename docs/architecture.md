@@ -50,6 +50,7 @@ The Engine never touches WMI, drivers or Windows directly; everything goes throu
 ## Timing (Engine.Tick, called every 5 s on the UI thread)
 | Every | Work |
 |---|---|
+| 2 s (window open) | read fan speeds for the window (a read; it does not keep host state alive) |
 | 5 s | read temperatures; one fan-curve step; governor step in Performance |
 | 10 s | thermal guard: read fan speeds and ambient sensor; fan watch |
 | 45 s (not during the wait after Performance) | heartbeat: re-send profile (and Performance power); end OGH's background if it returned; retry a failed apply |

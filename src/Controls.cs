@@ -255,10 +255,10 @@ namespace SalvaOPM
                     fg.StartCap = fg.EndCap = LineCap.Round;
                     g.DrawArc(fg, ring, -90, 360f * Math.Min(Rpm, MaxRpm) / MaxRpm);
                 }
-            string rpm = Rpm >= 0 ? Rpm.ToString() : "--";
-            Size rs = Th.Measure(rpm, Th.Title), us = Th.Measure("rpm", Th.Small);
-            Th.Text(g, rpm, Th.Title, Th.TextHi, (int)(cx - rs.Width / 2f), (int)(cy - rs.Height + Th.D(4)));
-            Th.Text(g, "rpm", Th.Small, Th.Sub, (int)(cx - us.Width / 2f), (int)(cy + Th.D(4)));
+            // centred by the renderer itself: measured widths of the semibold font leave it off-centre
+            int box = (int)(2 * rad);
+            Th.TextCenter(g, Rpm >= 0 ? Rpm.ToString() : "--", Th.Title, Th.TextHi, new Rectangle((int)(cx - rad), (int)(cy - Th.D(26)), box, Th.D(30)));
+            Th.TextCenter(g, "rpm", Th.Small, Th.Sub, new Rectangle((int)(cx - rad), (int)(cy + Th.D(4)), box, Th.D(18)));
 
             // temperature graph, newest point at the right edge
             float x0 = Th.D(140), x1 = Width - Th.D(16), y0 = Th.D(66), y1 = Height - Th.D(32);

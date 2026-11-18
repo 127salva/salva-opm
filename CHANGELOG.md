@@ -4,7 +4,7 @@ Versions are major.minor.patch; `CONTRIBUTING.md` says how each number was used.
 
 ## 2.5.0 - 2026-11-18
 ### Changed
-- New window, larger and fixed in size: a header with the version and a status pill (green "All good", or the warning); the modes as cards with icons; a panel per chip with its temperature, its fan speed as a ring and a graph of the last 5 minutes; the fan switch and curve restyled. Same behaviour, same firmware calls. The amber warning line and the bottom info line are gone (the pill and the panels show them).
+- New window, larger and fixed in size: a header with the version and a status pill (green "All good", or the warning); the modes as cards with icons; a panel per chip with its temperature, its fan speed as a ring (read every 2 s while the window is open) and a graph of the last 5 minutes; the fan switch and curve restyled. Same behaviour, same firmware calls. The amber warning line and the bottom info line are gone (the pill and the panels show them).
 
 ## 2.4.8 - 2026-11-18
 ### Fixed

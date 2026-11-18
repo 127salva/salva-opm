@@ -88,6 +88,14 @@ namespace SalvaOPM
         /// fan control was lost and in monitoring; the thermal guard takes them whenever it is engaged.</summary>
         public bool FansByBios { get { return FanControlLost || MonitorOnly || ((!_onAc || CpuUnknown || Lapsing) && !Guard.Active); } }
         public bool FansFresh(long now) { return Fans != null && now - _fansAt <= FansStaleMs; }
+
+        /// <summary>An extra fan-speed read for the open window (type 45; reads do not refresh the host state: lapses ended
+        /// on time while the guard read the fans every 10 s).</summary>
+        public void ReadFans(long now)
+        {
+            int[] f = _bios.ReadFanLevels();
+            if (f != null) { Fans = f; _fansAt = now; }
+        }
         private byte Profile { get { return _ctl.Effective == Mode.Performance ? HpBios.ProfilePerformance : HpBios.ProfileBalanced; } }
 
         public static byte[] PresetFor(Mode m) { return m == Mode.Eco ? HpBios.GpuBase : m == Mode.Performance ? HpBios.GpuMax : HpBios.GpuBoost; }

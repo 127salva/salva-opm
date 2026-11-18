@@ -8,7 +8,7 @@ Its logic follows Ohman (github.com/P4R1H/Ohman, GPL-3.0), except the Auto fan c
 One page:
 - **Header:** the logo, the name and the version; on the right a status pill: green "All good", or the current warning (amber; red for the thermal guard or the fail safe). Hovering it shows the whole text.
 - **Mode cards:** Eco, Balanced, Performance, each with an icon; the active one has a red border. "Eco (auto)" when the app chose Eco itself. Performance is greyed out on battery or with a charger below the laptop's requirement.
-- **CPU and GPU panels:** the temperature (amber from 85 °C, red from 95 °C; "asleep" for a sleeping GPU), the fan speed as a ring (full at 4800 rpm) and a graph of the last 5 minutes (kept while the window is closed; a sleeping GPU leaves a gap).
+- **CPU and GPU panels:** the temperature (amber from 85 °C, red from 95 °C; "asleep" for a sleeping GPU), the fan speed as a ring (full at 4800 rpm; read every 2 s while the window is open) and a graph of the last 5 minutes (kept while the window is closed; a sleeping GPU leaves a gap).
 - **Fan switch:** Auto alone in Eco and Balanced; Auto | Custom in Performance.
 - **Curve:** the curve in use. Custom has 7 points at 60–90 °C that drag up and down (Shift-drag moves the whole curve); the point under the mouse shows its percentage of top speed.
 

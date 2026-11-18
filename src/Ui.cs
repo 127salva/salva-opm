@@ -91,7 +91,7 @@ namespace SalvaOPM
 
             Sync();
             _refresh.Interval = 2000;
-            _refresh.Tick += delegate { Sync(); };
+            _refresh.Tick += delegate { E.ReadFans(_app.Now()); Sync(); };   // fan speeds every 2 s while the window is open
             _refresh.Start();
         }
 
