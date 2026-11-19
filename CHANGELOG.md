@@ -2,6 +2,15 @@
 
 Versions are major.minor.patch; `CONTRIBUTING.md` says how each number was used. Dates are when the build was made.
 
+## 2.5.3 - 2026-11-19
+### Fixed
+- Mode cards and fan switch: after a mouse click hid the focus ring, Enter or Space could apply the item the arrow keys had been on before (out of sight since 2.5.2). A click now makes them forget it.
+- Curve editor: after dragging a point with the mouse, Up/Down moved the point the keyboard had chosen earlier. They now go on from the point just dragged.
+### Removed
+- An unused property (`Engine.OnAc`).
+### Tests
+- The CPU temperature formula (`SystemSensors.Tctl`) has a self-check; before, only the laptop ran it.
+
 ## 2.5.2 - 2026-11-19
 ### Fixed
 - Curve editor: moving a point with Up/Down and pressing Tab before releasing the key lost the move (the key release went to the next control). The move is now saved when the curve loses the focus.

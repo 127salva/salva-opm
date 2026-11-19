@@ -19,9 +19,9 @@ Both print `self-check: N passed, 0 failed` and return the number of failures as
 | `CurveTests` | Auto and custom curves, clamping, stepping, smoothing, the 85 °C rule |
 | `GuardTests` | thermal guard engage, hold, release |
 | `IdentityTests` | which laptop may be written to |
-| `FirmwareTests` | the allow-list for every type 0–255 and several sizes; value ranges; simulator behaviour |
+| `FirmwareTests` | the allow-list for every type 0–255 and several sizes; value ranges; simulator behaviour; the CPU temperature formula |
 | `CoreTests` | the Engine end to end against the simulator: apply order, read-back and rollback, Performance kept for 10 minutes, lapse after Performance and at start-up, TDP changed after a GPU write, fans to firmware on battery or without a temperature, fans not following, crash, exit, conflicts, fail safe, monitoring-only writes nothing |
-| `SettingsTests` | round trip, bad values ignored, older curves raised to the lower bound; also the window's helpers (graph history, age and span text, a "what to do" hint for every warning, easing, a keyboard curve move saved on leaving) and the hardware thread (fast clicks collapse, a failing job reaches the fail safe) |
+| `SettingsTests` | round trip, bad values ignored, older curves raised to the lower bound; also the window's helpers (graph history, age and span text, a "what to do" hint for every warning, easing, a keyboard curve move saved on leaving, the arrow keys following a dragged point, Enter after a click applying nothing hidden) and the hardware thread (fast clicks collapse, a failing job reaches the fail safe) |
 | `EnduranceTests` | 14 simulated days (one session per day, sometimes restarted within seconds like an update) with random load, unplugging, sleep, mode changes, missing temperatures and 1 % failing BIOS calls. Every 5 s: PL within 45..80, never Performance on battery or saved, every lapse over within 180 s (time with the thermal guard on does not count: the guard restarts the wait), profile `0x04` never left behind, fans at maximum after 90 s at 85 °C, and no memory growth from day 1 to day 14. Fixed seed, so a failure repeats |
 
 The simulator (`SimFirmware`) encodes behaviour measured on the laptop: concurrent TDP only applies under profile `0x04`; host state lapses about 110 s after the last refresh; fan levels are ignored while the firmware has the fans.
@@ -37,7 +37,7 @@ The simulator (`SimFirmware`) encodes behaviour measured on the laptop: concurre
 | Other BIOS versions | none: only `F.13` is validated; the app warns on any other |
 
 ## Every feature: how it is checked
-Status of 2.5.2 (2026-11-19). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` lines recorded in `docs/user-tests.md` and `docs/hardware/evidence.md`. Self-check names are quoted from `src/SelfCheck.cs`.
+Status of 2.5.3 (2026-11-19). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` lines recorded in `docs/user-tests.md` and `docs/hardware/evidence.md`. Self-check names are quoted from `src/SelfCheck.cs`.
 
 | Feature | Self-checks | On the laptop |
 |---|---|---|

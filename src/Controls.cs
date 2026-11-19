@@ -303,6 +303,9 @@ namespace SalvaOPM
 
         protected override void OnGotFocus(EventArgs e) { _focus = Index; base.OnGotFocus(e); }
 
+        // a click hid the ring: forget the item the arrows were on, so Enter cannot apply a choice nobody can see
+        protected override void OnChangeUICues(UICuesEventArgs e) { if (e.ChangeFocus && !e.ShowFocus) _focus = -1; base.OnChangeUICues(e); }
+
         protected override void OnKeyDown(KeyEventArgs e)
         {
             int d = e.KeyCode == Keys.Left || e.KeyCode == Keys.Up ? -1 : e.KeyCode == Keys.Right || e.KeyCode == Keys.Down ? 1 : 0;
@@ -862,7 +865,12 @@ namespace SalvaOPM
             if (h != null) h((int[])Levels.Clone());
         }
 
-        protected override void OnMouseDown(MouseEventArgs e) { _drag = HandleAt(e.Location); if (_drag >= 0) { Capture = true; Invalidate(); } base.OnMouseDown(e); }
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            _drag = HandleAt(e.Location);
+            if (_drag >= 0) { _key = _drag; Capture = true; Invalidate(); }   // the arrow keys go on from the point just grabbed
+            base.OnMouseDown(e);
+        }
         protected override void OnMouseUp(MouseEventArgs e) { EndDrag(); }
         protected override void OnMouseCaptureChanged(EventArgs e) { EndDrag(); base.OnMouseCaptureChanged(e); }
         protected override void OnMouseLeave(EventArgs e) { if (_hover != -1 && _drag < 0) { _hover = -1; Invalidate(); } }

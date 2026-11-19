@@ -396,6 +396,11 @@ namespace SalvaOPM
             FwReply ro = new WmiFirmware(true, null).Execute(FirmwareRules.Omen, 16, new byte[4], 4);
             Check(!ro.Ok && ro.Error != null && ro.Error.StartsWith("read-only", StringComparison.Ordinal),
                 "read-only mode (--read, --dry-run) refuses type 16, which arms host fan control, before anything is sent");
+
+            // the CPU temperature register (SystemSensors; the simulator never runs this formula)
+            Check(SystemSensors.Tctl(400u << 21) == 50 && SystemSensors.Tctl(401u << 21) == 50.125 && SystemSensors.Tctl((792u << 21) | (1u << 19)) == 50
+                && double.IsNaN(SystemSensors.Tctl(0)) && double.IsNaN(SystemSensors.Tctl(0x7FFu << 21)),
+                "CPU temperature: bits 31:21 in eighths of a degree, -49 C with the range bit, nothing outside 0..130");
         }
 
         // ---------------------------------------------------------------- end-to-end (Engine + simulator)
@@ -875,6 +880,33 @@ namespace SalvaOPM
                 typeof(CurveView).GetMethod("OnLostFocus", bf).Invoke(cv, new object[] { EventArgs.Empty });
                 Check(saved != null && saved[0] == FanCurve.DefaultCustom[0] + 1 && !cv.Dragging,
                     "curve: a keyboard move is saved when the focus leaves before the key is released");
+            }
+            // ... and after a point is dragged with the mouse, the arrow keys go on from that point
+            using (CurveView cv = new CurveView())
+            {
+                cv.Size = new System.Drawing.Size(720, 204);
+                System.Reflection.BindingFlags bf = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+                for (int k = 0; k < 3; k++) typeof(CurveView).GetMethod("OnKeyDown", bf).Invoke(cv, new object[] { new System.Windows.Forms.KeyEventArgs(System.Windows.Forms.Keys.Right) });
+                // the 60 C point at level 24: x = 40, y = 24 + 150 * (1 - 24 / 48) = 99 (96 DPI layout)
+                System.Windows.Forms.MouseEventArgs at60 = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Left, 1, 40, 99, 0);
+                typeof(CurveView).GetMethod("OnMouseDown", bf).Invoke(cv, new object[] { at60 });
+                typeof(CurveView).GetMethod("OnMouseUp", bf).Invoke(cv, new object[] { at60 });
+                typeof(CurveView).GetMethod("OnKeyDown", bf).Invoke(cv, new object[] { new System.Windows.Forms.KeyEventArgs(System.Windows.Forms.Keys.Up) });
+                Check(cv.Levels[0] == FanCurve.DefaultCustom[0] + 1 && cv.Levels[3] == FanCurve.DefaultCustom[3],
+                    "curve: after a mouse drag the arrow keys move the point that was dragged");
+            }
+            // the mode cards: a click that hides the ring also forgets the item the arrows were on
+            using (Seg seg = new Seg())
+            {
+                seg.Items = new string[] { "Eco", "Balanced", "Performance" };
+                seg.Index = 1;
+                int picked = -1;
+                seg.Picked += delegate(int i) { picked = i; };
+                System.Reflection.BindingFlags bf = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+                typeof(Seg).GetMethod("OnKeyDown", bf).Invoke(seg, new object[] { new System.Windows.Forms.KeyEventArgs(System.Windows.Forms.Keys.Right) });
+                typeof(Seg).GetMethod("OnChangeUICues", bf).Invoke(seg, new object[] { new System.Windows.Forms.UICuesEventArgs(System.Windows.Forms.UICues.ChangeFocus) });
+                typeof(Seg).GetMethod("OnKeyDown", bf).Invoke(seg, new object[] { new System.Windows.Forms.KeyEventArgs(System.Windows.Forms.Keys.Enter) });
+                Check(picked == -1, "mode cards: after a click hides the ring, Enter does not apply the item the arrows were on");
             }
             // the hardware thread: jobs with the same key collapse into the last one, in order; an exception reaches the callback
             List<string> ran = new List<string>();

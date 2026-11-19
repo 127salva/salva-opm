@@ -173,18 +173,21 @@ namespace SalvaOPM
             {
                 if (_pci != null) { try { held = _pci.WaitOne(250); } catch (AbandonedMutexException) { held = true; } }
                 ulong[] o = new ulong[1];
-                if (_cpu.Call("ioctl_read_smn", new ulong[] { ThmTconCurTmp }, o))
-                {
-                    uint r = (uint)o[0];
-                    double tctl = ((r >> 21) & 0x7FF) * 0.125;       // bits 31:21 in eighths of a degree
-                    if ((r & (1u << 19)) != 0) tctl -= 49;            // range select: -49 C (Zen 2 and later)
-                    if (tctl > 0 && tctl < 130) t = tctl;
-                }
+                if (_cpu.Call("ioctl_read_smn", new ulong[] { ThmTconCurTmp }, o)) t = Tctl((uint)o[0]);
             }
             catch (Exception) { }
             finally { if (held) { try { _pci.ReleaseMutex(); } catch (Exception) { } } }
             _recent[2] = _recent[1]; _recent[1] = _recent[0]; _recent[0] = t;
             _cpuTemp = Median(_recent);
+        }
+
+        /// <summary>THM_TCON_CUR_TMP to degrees C: bits 31:21 in eighths of a degree, minus 49 when bit 19 (range select,
+        /// Zen 2 and later) is set; NaN outside 0..130.</summary>
+        public static double Tctl(uint r)
+        {
+            double t = ((r >> 21) & 0x7FF) * 0.125;
+            if ((r & (1u << 19)) != 0) t -= 49;
+            return t > 0 && t < 130 ? t : double.NaN;
         }
 
         private static double Median(double[] v)
