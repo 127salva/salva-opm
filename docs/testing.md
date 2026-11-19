@@ -70,6 +70,7 @@ Status of 2.5.1 (2026-11-18). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` l
 | Window 2.5.0: graph hover, a filling graph, ring glide, slide and fade, keyboard | "graph hover: the age …", "graph: the span …", "ring glide …", "window motion …" | looked at by the owner on 2026-11-18; keyboard use not reported yet |
 | Setup right after an uninstall (shows Install, waits for the old folder) | none | 2026-11-18 20:15:16: `install: waited 2 s …`, `installed 2.5.0` at the first try |
 | OMEN key | none | pass on 2.4.0 and in H7 |
+| Tray menu 2.5.1: small dark menu (Open, Exit), a second right-click closes it | none | **not reported yet** (looked at in `--demo` only) |
 
 ## Adding a check
 New logic gets a check in the matching group. A scenario test builds a `Rig` (simulated firmware, sensors and settings folder), drives the Engine with `RunFor`, and asserts on the simulator's state and its call log.

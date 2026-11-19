@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(build.cmd)",
+      "Bash(build.cmd *)",
+      "Bash(./build.cmd *)",
+      "PowerShell(.\\build.cmd)",
+      "PowerShell(.\\build.cmd *)",
+      "PowerShell(& .\\dist\\SalvaOPM-Setup.exe --selftest *)",
+      "PowerShell(& .\\dist\\SalvaOPM-Setup.exe --demo*)",
+      "PowerShell(Start-Process .\\dist\\SalvaOPM-Setup.exe -ArgumentList --demo*)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(git * push *)",
+      "Bash(git tag *)",
+      "Bash(git * tag *)",
+      "Bash(gh release *)",
+      "Bash(gh repo edit *)",
+      "PowerShell(git push *)",
+      "PowerShell(git * push *)",
+      "PowerShell(git tag *)",
+      "PowerShell(git * tag *)",
+      "PowerShell(gh release *)",
+      "PowerShell(gh repo edit *)"
+    ],
+    "deny": [
+      "Bash(*-Verb RunAs*)",
+      "Bash(runas *)",
+      "PowerShell(*-Verb RunAs*)",
+      "PowerShell(runas *)"
+    ]
+  }
+}

@@ -14,9 +14,11 @@ One Windows process, one thread for all hardware work. The app never uses the ne
 ## Modules (`src/`)
 ```
 Program.cs       entry point, command switches, Logger, Preflight (--check), Tools (--read, --dry-run)
-App.cs           the running app: tray icon, 5 s timer, power events, OMEN key, window lifetime; Identity check
-Ui.cs            MainForm: the one-page window; TempHistory (the graphs' last 5 minutes)
-Controls.cs      Th (theme, drawn icons), Seg (switch and mode cards), ChipPanel, StatusPill, CurveView (curve editor)
+App.cs           the running app: tray icon and menu, 5 s timer, power events, OMEN key, window lifetime;
+                 HardwareThread (the one thread for firmware work); Identity check
+Ui.cs            MainForm: the one-page window; TempHistory (the graphs' last 5 minutes); Hints (warning help)
+Controls.cs      Th (theme, drawn icons), Seg (switch and mode cards), ChipPanel, StatusPill, CurveView (curve editor),
+                 TrayMenuRenderer (the dark tray menu)
 Setup.cs         install / update / uninstall and the setup window
 Ogh.cs           Tasks (Task Scheduler COM), Ogh (OMEN Gaming Hub removal)
 
@@ -36,7 +38,10 @@ SelfCheck.cs     the self-checks
 ## Layers
 ```
 UI (Ui, Controls, App)
-        │ calls                       ▲ Changed event
+        │ posts jobs                  ▲ Changed event
+        ▼                             │
+HardwareThread (one thread, lock on the engine)
+        │                             │
         ▼                             │
 Engine ──► pure rules (ModeController, FanCurve, HeatPush, ThermalGuard, Governor)
         │
@@ -76,7 +81,7 @@ All hardware work (every `Engine` call, the charger read, the identity check) ru
 - **License GPL-3.0-or-later**, as Ohman, whose logic it follows; adapted files say so in their header.
 
 ## State on disk
-`C:\ProgramData\SalvaOPM\state.txt` (key=value): saved mode, the concurrent-TDP baseline, the GPU record read before the first write, Performance's fan choice, the custom curve. `log.txt` beside it holds events (256 KB, one rotation to `log.txt.old`); `running.flag` is there while the app runs (left behind by a crash) and `setup-result.txt` holds the last setup's message.
+`C:\ProgramData\SalvaOPM\state.txt` (key=value): saved mode, the concurrent-TDP baseline, the GPU record read before the first write, the fan choice of each mode (`fanEco`, `fanBalanced`, `fanPerformance`), the custom curve. `log.txt` beside it holds events (256 KB, one rotation to `log.txt.old`); `running.flag` is there while the app runs (left behind by a crash) and `setup-result.txt` holds the last setup's message.
 
 ## Source of the firmware facts
 `docs/hardware/evidence.md` records how each call, value and behaviour was established: decoded from OGH, taken from Ohman or the Linux `hp-wmi` driver, or measured on the laptop.
