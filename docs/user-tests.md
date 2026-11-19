@@ -57,6 +57,7 @@ Install first: run `SalvaOPM-Setup.exe` → **Update**. After each check, send `
 | H9 | Firmware fan choice (~15 min) | Performance → fans **Firmware**, game or CPU load 10 min → Balanced → **Firmware** → **Recommended** | log: `Performance fans: firmware`; no `drift detected` while in Performance; `host limits lapsed` after leaving; `Balanced fans: recommended` then `fans back to the app's curve`. Watch the temperatures: the app's thermal guard is off while Firmware is chosen |
 | H8 | Fresh Windows (**not done yet**) | after a clean Windows install, before installing anything from HP: run the setup → **Install** with internet, then `--check` and H1c | installs (PawnIO downloaded), modes applied and verified. Only Windows' own .NET Framework 4.8 is needed (part of Windows 10 1903+ and 11) |
 |  | OMEN key | press twice | window opens, then hides |
+|  | Tray menu | right-click the tray icon, right-click it again; then right-click → **Exit** | a small dark menu opens, the second right-click closes it; Exit ends the app (log: `fans handed to the firmware's own curve`, no `unhandled` line) |
 
 **CPU load without downloading anything** (normal PowerShell). Start:
 ```powershell
