@@ -2,7 +2,7 @@
 
 Versions are major.minor.patch; `CONTRIBUTING.md` says how each number was used. Dates are when the build was made.
 
-## Unreleased
+## 2.5.2 - 2026-11-19
 ### Fixed
 - Curve editor: moving a point with Up/Down and pressing Tab before releasing the key lost the move (the key release went to the next control). The move is now saved when the curve loses the focus.
 
