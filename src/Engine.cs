@@ -114,8 +114,9 @@ namespace SalvaOPM
             {
                 if (MonitorOnly) return "Monitoring only: " + MonitorReason;
                 if (Failed && LastError != null) return LastError;
-                if (Guard.Active) return "Thermal guard: fans at maximum";
+                // before the guard: once the fans stop answering, the guard stays on (the CPU cannot cool) but writes nothing
                 if (FanControlLost) return "Fans handed to the firmware: " + _fanLostWhy;
+                if (Guard.Active) return "Thermal guard: fans at maximum";
                 if (_onAc && CpuUnknown) return "No CPU temperature: the firmware drives the fans";
                 if (_fanFailures >= 3) return "Fan writes failing; retrying once a minute";
                 if (_gpuRefused != null) return "GPU power preset not accepted by the firmware";

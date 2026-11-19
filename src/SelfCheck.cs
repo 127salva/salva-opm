@@ -623,6 +623,12 @@ namespace SalvaOPM
             RunFor(r, 0, 150000);
             Check(r.Core.FanControlLost && r.Sim.FansByBios && r.Core.Fault != null, "fans far below the level written for a minute: control handed to the firmware");
 
+            r = new Rig(); r.Core.Boot(true, 0);
+            r.Sens.Cpu = 96; r.Sim.IgnoreType = 46; r.Sim.OwnFanCpu = 2; r.Sim.OwnFanGpu = 2;   // hot, and the fans neither turn nor take levels
+            RunFor(r, 0, 120000);
+            Check(r.Core.FanControlLost && r.Core.Guard.Active && r.Core.Fault != null && r.Core.Fault.StartsWith("Fans handed to the firmware", StringComparison.Ordinal),
+                "fans not answering the thermal guard: the window says the firmware has them, not 'fans at maximum'");
+
             r = new Rig(); r.Sim.ErrorType = 46; r.Core.Boot(true, 0);
             RunFor(r, 0, 480000);
             Check(r.Core.FanControlLost && r.Sim.FansByBios, "fan writes refused 8 times: control handed to the firmware");

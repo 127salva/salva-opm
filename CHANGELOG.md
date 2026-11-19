@@ -2,6 +2,10 @@
 
 Versions are major.minor.patch; `CONTRIBUTING.md` says how each number was used. Dates are when the build was made.
 
+## 2.5.4 - 2026-11-19
+### Fixed
+- When the fans stopped answering the thermal guard, the window kept saying "Thermal guard: fans at maximum" (the guard stays on while the CPU cannot cool) and hid the warning that the firmware has the fans and you should save your work and restart. That warning now comes first.
+
 ## 2.5.3 - 2026-11-19
 ### Fixed
 - Mode cards and fan switch: after a mouse click hid the focus ring, Enter or Space could apply the item the arrow keys had been on before (out of sight since 2.5.2). A click now makes them forget it.

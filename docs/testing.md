@@ -37,7 +37,7 @@ The simulator (`SimFirmware`) encodes behaviour measured on the laptop: concurre
 | Other BIOS versions | none: only `F.13` is validated; the app warns on any other |
 
 ## Every feature: how it is checked
-Status of 2.5.3 (2026-11-19). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` lines recorded in `docs/user-tests.md` and `docs/hardware/evidence.md`. Self-check names are quoted from `src/SelfCheck.cs`.
+Status of 2.5.4 (2026-11-19). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` lines recorded in `docs/user-tests.md` and `docs/hardware/evidence.md`. Self-check names are quoted from `src/SelfCheck.cs`.
 
 | Feature | Self-checks | On the laptop |
 |---|---|---|
@@ -51,7 +51,7 @@ Status of 2.5.3 (2026-11-19). "Laptop" cites `C:\ProgramData\SalvaOPM\log.txt` l
 | Thermal guard (CPU ≥ 95 °C, ambient ≥ 62 °C, stalled fans) | `GuardTests`; "thermal guard: CPU >= 95 …", "… on battery takes the fans …", "the thermal guard still takes the fans during the lapse", "a guard during the lapse …: the lapse starts again after it …" | **observed on 2.4.6** (2026-11-14): engaged 04:32:04 at CPU 95 °C while gaming in Performance on a custom curve topping out at 4300 rpm; released 04:37:25, a minute after the game ended |
 | Battery-drain rule (40 %) | `GovernorTests` battery rows | **never observed** |
 | Chassis 54 °C rule | `GovernorTests` chassis rows; "governor (chassis 54) …" | **never observed** |
-| Fans not following → firmware | "fans far below the level written for a minute …", "fan writes refused 8 times …" | **never observed** (the fans always followed) |
+| Fans not following → firmware | "fans far below the level written for a minute …", "fan writes refused 8 times …", "fans not answering the thermal guard: the window says the firmware has them …" | **never observed** (the fans always followed) |
 | No CPU temperature → firmware fans | "three missing readings in a row: fans handed to the firmware", "CPU temperature back …" | **never observed** (PawnIO always answered) |
 | Lapse after Performance and at start | "leaving Performance: PL 55 written …", "boot with a host limit still set …"; endurance invariant (≤ 180 s) | `host limits lapsed … PL 0/0` 125–131 s later in H2, H6, H3b, H1, H5, H7 |
 | Mode change during the lapse is deferred | "a mode change while the old limit lapses …" | H3b; H7 (23:34:12) |
