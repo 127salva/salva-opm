@@ -66,7 +66,7 @@ CRLF line ends and UTF-8 without BOM (`.editorconfig`, `.gitattributes`). Two tr
 
 ## Releasing
 Pushing, tagging and publishing happen only with the owner's OK.
-1. Set `Setup.Version` (`src/Setup.cs`) and add the entry to `CHANGELOG.md`. Update the version lines at the top of `CLAUDE.md`, `docs/testing.md` and `docs/what-it-does.md`.
+1. Set `Setup.Version` (`src/Setup.cs`) and add the entry to `CHANGELOG.md`. Update the version lines at the top of `CLAUDE.md`, `docs/testing.md` and `docs/what-it-does.md`. When the window changed, retake `docs/images/window.png` from `--demo`.
 2. `build.cmd`; run the checks in `docs/user-tests.md` on the laptop.
 3. Commit and push to `main`. The owner's push bypasses the branch protection, so GitHub prints "Required status check ... is expected": that is normal. CI builds, runs the checks and prints the SHA-256 of the setup.
 4. Wait for the run (`gh run watch <id> --exit-status`), download its artifact (`gh run download <id>`), and check that `Get-FileHash` of the downloaded exe matches the hash in the CI log.

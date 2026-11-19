@@ -65,6 +65,6 @@ After a BIOS update the window warns ("not the validated F.13"): repeat H1 and H
 | `src/SelfCheck.cs` | every self-check; scenario tests use a `Rig` (simulator) |
 | `.claude/settings.json` | shared Claude Code permissions (personal ones: `settings.local.json`, ignored) |
 
-Gotchas: files are CRLF and UTF-8 without BOM (PowerShell's UTF-8 encoder adds a BOM; perl replacements eat backslashes in Windows paths). Changes to the window's look need the owner's approval, one by one.
+Gotchas: files are CRLF and UTF-8 without BOM; scripted edits have two traps (`docs/development.md`, "Files"). Changes to the window's look need the owner's approval, one by one.
 
 Outside sources: Ohman (github.com/P4R1H/Ohman, read at the commit named in `evidence.md` section 11), the Linux kernel's `hp-wmi.c`, PawnIO (pawnio.eu).
