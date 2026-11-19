@@ -827,10 +827,16 @@ namespace SalvaOPM
             base.OnKeyDown(e);
         }
 
-        protected override void OnKeyUp(KeyEventArgs e)
+        protected override void OnKeyUp(KeyEventArgs e) { CommitKeys(); base.OnKeyUp(e); }
+        // Tab while an arrow is held: the key-up goes to the next control, so save the move here
+        protected override void OnLostFocus(EventArgs e) { CommitKeys(); base.OnLostFocus(e); }
+
+        private void CommitKeys()
         {
-            if (_keyDirty) { _keyDirty = false; Action<int[]> h = Committed; if (h != null) h((int[])Levels.Clone()); }
-            base.OnKeyUp(e);
+            if (!_keyDirty) return;
+            _keyDirty = false;
+            Action<int[]> h = Committed;
+            if (h != null) h((int[])Levels.Clone());
         }
 
         protected override void OnMouseDown(MouseEventArgs e) { _drag = HandleAt(e.Location); if (_drag >= 0) { Capture = true; Invalidate(); } }

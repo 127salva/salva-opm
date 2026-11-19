@@ -126,8 +126,8 @@ namespace SalvaOPM
             _refresh.Start();
         }
 
-        /// <summary>Brings every control in line with the engine. Cheap; called on engine changes and every 2 s.</summary>
-        /// <summary>Never waits: while a hardware job holds the engine this sync is skipped, and that job's Changed brings the next.</summary>
+        /// <summary>Brings every control in line with the engine (on each engine change). Never waits: while a hardware job
+        /// holds the engine it only shows the clicked choice, and that job's Changed brings the next sync.</summary>
         public void Sync()
         {
             if (!System.Threading.Monitor.TryEnter(E)) { ShowPending(); return; }

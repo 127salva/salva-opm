@@ -865,6 +865,17 @@ namespace SalvaOPM
                 "ring glide: an ease-in-out from 0 to 1, slow at both ends, half way at half time");
             Check(ChipPanel.SpanText(9, 60, 5) == "40 s" && ChipPanel.SpanText(27, 60, 5) == "2 min 10 s" && ChipPanel.SpanText(60, 60, 5) == "5 min",
                 "graph: the span shown under a graph that is still filling up");
+            // the curve editor: Up held, then Tab: the key-up goes elsewhere, so leaving the control must save the move
+            using (CurveView cv = new CurveView())
+            {
+                int[] saved = null;
+                cv.Committed += delegate(int[] l) { saved = l; };
+                System.Reflection.BindingFlags bf = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+                typeof(CurveView).GetMethod("OnKeyDown", bf).Invoke(cv, new object[] { new System.Windows.Forms.KeyEventArgs(System.Windows.Forms.Keys.Up) });
+                typeof(CurveView).GetMethod("OnLostFocus", bf).Invoke(cv, new object[] { EventArgs.Empty });
+                Check(saved != null && saved[0] == FanCurve.DefaultCustom[0] + 1 && !cv.Dragging,
+                    "curve: a keyboard move is saved when the focus leaves before the key is released");
+            }
             // the hardware thread: jobs with the same key collapse into the last one, in order; an exception reaches the callback
             List<string> ran = new List<string>();
             Exception seen = null;
