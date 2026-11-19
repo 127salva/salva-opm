@@ -5,6 +5,7 @@ Versions are major.minor.patch; `CONTRIBUTING.md` says how each number was used.
 ## 2.5.2 - 2026-11-19
 ### Fixed
 - Curve editor: moving a point with Up/Down and pressing Tab before releasing the key lost the move (the key release went to the next control). The move is now saved when the curve loses the focus.
+- The keyboard focus ring (the white ring after Tab) stayed until the window closed. A mouse click anywhere in the window now hides it; Tab or an arrow key shows it again.
 
 ## 2.5.1 - 2026-11-18
 ### Changed

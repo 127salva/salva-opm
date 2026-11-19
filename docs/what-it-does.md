@@ -12,7 +12,7 @@ One page:
 - **Fan switch:** Firmware | Recommended in Eco and Balanced; Firmware | Recommended | Custom in Performance. Each mode remembers its own choice.
 - **Curve:** the curve in use. Custom has 7 points at 60–90 °C that drag up and down (Shift-drag moves the whole curve); the point under the mouse shows its percentage of top speed.
 - **Feel:** a click shows a pressed look at once and applies on release; the fan switch's red pill slides (180 ms) and the chosen card fades in (150 ms), also when the app changes the mode itself (unplugging). Not for keyboard choices, and not when Windows animations are off.
-- **Keyboard:** Tab moves between the mode cards, the fan switch and an editable curve (a white ring shows where); arrow keys pick, Enter or Space applies; on the curve Left/Right pick a point and Up/Down move it (Shift: the whole curve).
+- **Keyboard:** Tab moves between the mode cards, the fan switch and an editable curve (a white ring shows where); arrow keys pick, Enter or Space applies; on the curve Left/Right pick a point and Up/Down move it (Shift: the whole curve). A mouse click anywhere in the window hides the ring until the next Tab or arrow key.
 
 Closing the window keeps the app in the tray. The tray diamond shows the mode (green Eco, grey Balanced, red Performance); hovering it shows temperatures and fan speeds, or the current warning when there is one. Right-click: a small dark menu with Open and Exit (modes are chosen in the window). The OMEN key opens and hides the window.
 

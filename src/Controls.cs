@@ -258,6 +258,29 @@ namespace SalvaOPM
 
         protected override void OnGotFocus(EventArgs e) { Invalidate(); base.OnGotFocus(e); }
         protected override void OnLostFocus(EventArgs e) { Invalidate(); base.OnLostFocus(e); }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam);
+
+        /// <summary>A mouse click hides the keyboard focus ring for the whole window (WM_CHANGEUISTATE, UIS_SET,
+        /// UISF_HIDEFOCUS), as browsers do; WinForms shows it again on the next Tab or arrow key.</summary>
+        public static void HideFocusCues(Control c)
+        {
+            Form f = c.FindForm();
+            if (f != null && f.IsHandleCreated) SendMessage(f.Handle, 0x127, (IntPtr)0x10001, IntPtr.Zero);
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e) { HideFocusCues(this); base.OnMouseDown(e); }
+        protected override void OnChangeUICues(UICuesEventArgs e) { Invalidate(); base.OnChangeUICues(e); }
+
+        /// <summary>WinForms shows the ring again on Tab only: an arrow key after a click must show it too, or the arrows
+        /// would move a focus nobody can see (WM_CHANGEUISTATE, UIS_CLEAR, UISF_HIDEFOCUS).</summary>
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            Form f = FindForm();
+            if (!ShowFocusCues && f != null && f.IsHandleCreated && IsInputKey(e.KeyCode)) SendMessage(f.Handle, 0x127, (IntPtr)0x10002, IntPtr.Zero);
+            base.OnKeyDown(e);
+        }
     }
 
     /// <summary>Ohman's segmented control: a sunken pill with the chosen item filled in the accent colour.</summary>
@@ -839,7 +862,7 @@ namespace SalvaOPM
             if (h != null) h((int[])Levels.Clone());
         }
 
-        protected override void OnMouseDown(MouseEventArgs e) { _drag = HandleAt(e.Location); if (_drag >= 0) { Capture = true; Invalidate(); } }
+        protected override void OnMouseDown(MouseEventArgs e) { _drag = HandleAt(e.Location); if (_drag >= 0) { Capture = true; Invalidate(); } base.OnMouseDown(e); }
         protected override void OnMouseUp(MouseEventArgs e) { EndDrag(); }
         protected override void OnMouseCaptureChanged(EventArgs e) { EndDrag(); base.OnMouseCaptureChanged(e); }
         protected override void OnMouseLeave(EventArgs e) { if (_hover != -1 && _drag < 0) { _hover = -1; Invalidate(); } }

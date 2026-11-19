@@ -228,6 +228,9 @@ namespace SalvaOPM
             try { if (DwmSetWindowAttribute(Handle, 20, ref on, 4) != 0) DwmSetWindowAttribute(Handle, 19, ref on, 4); } catch (Exception) { }
         }
 
+        /// <summary>A click on the window background hides the keyboard focus ring too.</summary>
+        protected override void OnMouseDown(MouseEventArgs e) { Ctl.HideFocusCues(this); base.OnMouseDown(e); }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing) { _refresh.Dispose(); _tip.Dispose(); }
