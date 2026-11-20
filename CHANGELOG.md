@@ -2,6 +2,10 @@
 
 Versions are major.minor.patch; `CONTRIBUTING.md` says how each number was used. Dates are when the build was made.
 
+## Unreleased
+### Fixed
+- `--demo`: the simulated firmware kept a line for every call in memory, which nothing read; a demo left open grew by about 0.4 MB an hour. The demo now keeps no such log (the self-checks still do). The installed app is not affected.
+
 ## 2.5.4 - 2026-11-19
 ### Fixed
 - When the fans stopped answering the thermal guard, the window kept saying "Thermal guard: fans at maximum" (the guard stays on while the CPU cannot cool) and hid the warning that the firmware has the fans and you should save your work and restart. That warning now comes first.

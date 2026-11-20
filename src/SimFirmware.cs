@@ -44,16 +44,17 @@ namespace SalvaOPM
         public int ErrorType = -1;                // rc 1
 
         public readonly List<string> Log = new List<string>();
+        public bool KeepLog = true;               // the self-checks read Log; --demo does not, so it would only grow
 
         public void Advance(long ms) { NowMs += ms; Expire(); }
 
         private void Expire()
         {
-            if (_tdpResetAt >= 0 && NowMs >= _tdpResetAt) { Tdp = _tdpResetTo; _tdpResetAt = -1; Log.Add(NowMs + " firmware changed TDP to " + _tdpResetTo); }
+            if (_tdpResetAt >= 0 && NowMs >= _tdpResetAt) { Tdp = _tdpResetTo; _tdpResetAt = -1; if (KeepLog) Log.Add(NowMs + " firmware changed TDP to " + _tdpResetTo); }
             if (KeepAliveMs >= 0 && NowMs - KeepAliveMs > ExpiryMs)
             {
                 HostPl1 = 0; HostPl2 = 0; Profile = HpBios.ProfileBalanced; HeldCpu = HeldGpu = -1; KeepAliveMs = -1;
-                Log.Add(NowMs + " EXPIRED: host limits, profile and fan levels dropped");
+                if (KeepLog) Log.Add(NowMs + " EXPIRED: host limits, profile and fan levels dropped");
             }
         }
 
@@ -68,7 +69,7 @@ namespace SalvaOPM
             FirmwareRules.Check(command, type, input, outSize);
             Expire();
             FwReply r = new FwReply();
-            Log.Add(string.Format("{0} cmd 0x{1:X} type {2} in {3} (profile 0x{4:X2})", NowMs, command, type,
+            if (KeepLog) Log.Add(string.Format("{0} cmd 0x{1:X} type {2} in {3} (profile 0x{4:X2})", NowMs, command, type,
                 BitConverter.ToString(input, 0, Math.Min(input.Length, 4)), Profile));
             if (FailAll) { r.Error = "simulated transport failure"; return r; }
             r.Data = new byte[outSize];

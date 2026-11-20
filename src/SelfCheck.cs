@@ -393,6 +393,14 @@ namespace SalvaOPM
             Check(b.SetProfile(HpBios.ProfileBalanced, false) && b.WriteTdp(55) && b.ReadPower().Tdp == 30, "sim: concurrent TDP is ignored outside 0x04");
             Check(b.SetProfile(HpBios.ProfilePerformance, false) && b.WriteTdp(82) && b.ReadPower().Tdp == 82, "sim: concurrent TDP applies under 0x04");
 
+            SimFirmware quiet = new SimFirmware { KeepLog = false };   // as --demo uses it
+            HpBios qb = new HpBios(quiet);
+            qb.SetProfile(HpBios.ProfileBalanced, false); qb.WriteFanLevels(30, 30);
+            bool heldQuiet = Same(qb.ReadFanLevels(), new int[] { 30, 30 });
+            quiet.Advance(200000);
+            Check(heldQuiet && Same(qb.ReadFanLevels(), new int[] { 21, 19 }) && quiet.Log.Count == 0,
+                "sim without its call log (--demo): same behaviour, and the log stays empty instead of growing");
+
             FwReply ro = new WmiFirmware(true, null).Execute(FirmwareRules.Omen, 16, new byte[4], 4);
             Check(!ro.Ok && ro.Error != null && ro.Error.StartsWith("read-only", StringComparison.Ordinal),
                 "read-only mode (--read, --dry-run) refuses type 16, which arms host fan control, before anything is sent");

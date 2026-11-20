@@ -126,7 +126,7 @@ namespace SalvaOPM
                 string dir = demo ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "demo-state") : Settings.DefaultDirectory();
                 if (!demo) Setup.SecureDataDir();
                 Logger log = new Logger(dir);
-                IFirmware fw = demo ? (IFirmware)new SimFirmware() : new WmiFirmware(false, null);
+                IFirmware fw = demo ? (IFirmware)new SimFirmware { KeepLog = false } : new WmiFirmware(false, null);
                 HpBios bios = new HpBios(fw);
                 Settings settings = Settings.Load(dir);
                 IPowerModeSetter win = demo ? (IPowerModeSetter)new NullPowerMode() : new WindowsPowerMode();
