@@ -1,0 +1,14 @@
+# build output
+/out/
+/dist/
+
+# PawnIO's installer is downloaded by the setup at install time, never committed or shipped
+/third_party/PawnIO_setup.exe
+
+# editors and Windows
+.vs/
+.vscode/
+*.user
+*.suo
+Thumbs.db
+desktop.ini

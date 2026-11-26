@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and self-check
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      # actions pinned to a full commit SHA (a moved tag cannot change what runs); Dependabot proposes updates
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # build.cmd compiles with warnings as errors, runs the self-checks (simulator only), then builds the setup exe
+      - name: Build and run the self-checks
+        shell: cmd
+        run: build.cmd
+
+      - name: SHA-256 of the setup
+        shell: pwsh
+        run: (Get-FileHash dist/SalvaOPM-Setup.exe -Algorithm SHA256).Hash
+
+      - name: Upload the setup
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: SalvaOPM-Setup
+          path: dist/SalvaOPM-Setup.exe
+          if-no-files-found: error
