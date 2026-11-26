@@ -43,7 +43,7 @@ Closing the window keeps the app in the tray. The tray diamond shows the mode (g
 **Unexpected error:** the app leaves Performance, puts profile `0x30` back and writes nothing more to the firmware until it restarts (fail safe; red tray icon). Exit, sign-out and shutdown still set the Windows power mode back to Balanced.
 
 ## Every BIOS call it can make (anything else is refused in code before it is sent)
-Through Windows' own WMI channel `root\wmi hpqBIntM`. Packet = `"SECU"` + command + type + data.
+Through Windows' own WMI channel `root\wmi hpqBIntM`. Packet = `"SECU"` + command + type + size + data.
 
 | Command | Type | Dir | Data | Used for |
 |---|---|---|---|---|

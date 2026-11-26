@@ -10,7 +10,7 @@ labels: bug
 
 **Steps**
 
-**Version and machine**
+**Install and machine**
 - When it was installed (the last `installed` line in the log):
 - Model, board, BIOS (first `identity:` line in the log):
 
