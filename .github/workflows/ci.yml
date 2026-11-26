@@ -18,7 +18,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
-      # actions pinned to a full commit SHA (a moved tag cannot change what runs); Dependabot proposes updates
+      # actions pinned to a full commit SHA (a moved tag cannot change what runs)
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # build.cmd compiles with warnings as errors, runs the self-checks (simulator only), then builds the setup exe

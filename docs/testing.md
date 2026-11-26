@@ -19,7 +19,7 @@ Both print `self-check: N passed, 0 failed` and return the number of failures as
 | `IdentityTests` | which laptop may be written to |
 | `FirmwareTests` | the allow-list for every type 0–255 and several sizes, with no fan command (types 16, 39, 46) at any size; the profile write always leaves the fans to the firmware; value ranges; simulator behaviour (host limits held, then dropped; also without its call log and on the real clock, as `--demo` runs it); read-only mode; the CPU temperature formula |
 | `CoreTests` | the Engine end to end against the simulator: apply order, read-back and rollback, Performance held 10 minutes by the heartbeat alone, the Windows power mode slot after plugging in or out, lapse after Performance and at start-up (one profile write, then silence), TDP changed after a GPU write, a failed GPU read-back or heartbeat power read, a lasting BIOS failure logged once, no CPU temperature, crash, exit (from Balanced, Eco and Performance), the uninstall's restore, concurrent TDP put back even when the power read fails, conflicts, fail safe |
-| `SettingsTests` | round trip, bad values ignored, fan keys of older versions dropped |
+| `SettingsTests` | round trip, bad or unknown values ignored |
 | `WindowTests` | the window and setup window (history slots, hover, level colours, layout and text alignment, fonts, icons, animations, a hint for every warning, the exe's Properties) and the hardware thread (fast clicks collapse, a failing job reaches the fail safe) |
 | `EnduranceTests` | 14 simulated days (one session per day, sometimes restarted within seconds like an update) with random load, unplugging, sleep, mode changes, missing temperatures and 1 % failing BIOS calls. Every 5 s: PL within 45..80, never Performance on battery or saved, every lapse over within 180 s, profile `0x04` never left behind, every profile write with the fans left to the firmware, and no memory growth from day 1 to day 14. Fixed seed, so a failure repeats |
 
@@ -51,7 +51,7 @@ The simulator (`SimFirmware`) encodes behaviour measured on the laptop (`docs/fi
 | Chassis 54 °C rule | `GovernorTests`, `CoreTests` | simulator only (never triggered on the laptop) |
 | No CPU temperature (PawnIO missing) | `CoreTests` | simulator only (PawnIO always answered) |
 | A BIOS call that fails (warning, retry, logged once) | `CoreTests`, `EnduranceTests` | simulator only (no call failed on the laptop) |
-| Fail safe after an unexpected error | `CoreTests` | seen once (a window drawing error in an earlier version; a window error now only closes the window) |
+| Fail safe after an unexpected error | `CoreTests` | seen once (a window drawing error; a window error now only closes the window) |
 | Exit, sign-out, shutdown end on Balanced | `CoreTests`, `WindowTests` (hardware thread) | seen (tray Exit, plain sign-out); going back to work after a cancelled sign-out never seen |
 | Install, update, uninstall and restore; the PawnIO download and its hash | `CoreTests` (the restore) | seen, also uninstall from Settings > Apps |
 | OMEN Gaming Hub removal; working without HP's drivers | none | seen |

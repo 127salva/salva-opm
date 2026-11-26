@@ -319,7 +319,8 @@ namespace SalvaOPM
         private bool ApplyGpu(byte[] want)
         {
             byte[] cur = _bios.ReadGpu();
-            if (cur != null && _s.FactoryGpu == null) { _s.FactoryGpu = cur; _s.Save(); }
+            // only a record uninstall can write back (Settings.Load drops any other): an out-of-range one waits for a later read
+            if (_s.FactoryGpu == null && HpBios.IsLegalGpu(cur)) { _s.FactoryGpu = cur; _s.Save(); }
             // already set: nothing outstanding, so a warning left by an earlier failed read-back goes too
             if (GpuMatches(cur, want) && (cur[2] == want[2] || Same(want, _gpuWritten))) { _gpuRefused = null; return true; }
             if (Same(want, _gpuRefused)) return false;

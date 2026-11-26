@@ -183,14 +183,11 @@ namespace SalvaOPM
             return 1 - u * u * u * u;
         }
 
-
         public static Color Mix(Color a, Color b, double k)
         {
             k = Math.Max(0, Math.Min(1, k));
             return Color.FromArgb((int)(a.A + (b.A - a.A) * k), (int)(a.R + (b.R - a.R) * k), (int)(a.G + (b.G - a.G) * k), (int)(a.B + (b.B - a.B) * k));
         }
-
-
 
         /// <summary>The logo's lavender gradient (window, taskbar, exe icon); the tray diamond shows the mode in its own colours.</summary>
         public static readonly Color LogoLight = C("#D4C7FA"), LogoDark = C("#8B73E0");
@@ -276,7 +273,6 @@ namespace SalvaOPM
             int x = (int)Math.Round(left - ink.X), y = (int)Math.Round(top - ink.Y);
             return new RectangleF(x + ink.X, y + ink.Y, ink.Width, ink.Height);
         }
-
 
         private static Bitmap Cached(string kind, Color c, int n)
         {

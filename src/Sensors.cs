@@ -297,6 +297,7 @@ namespace SalvaOPM
             {
                 CloseNvml();
                 _gpuTemp = double.NaN;
+                _gpuLoad = double.NaN;   // unknown counts as busy for the Performance rules, never a stale idle reading
                 _gpuStatus = e.Message;
                 _nextGpuMs = now + 30000;
             }

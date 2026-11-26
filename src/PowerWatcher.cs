@@ -17,7 +17,7 @@ namespace SalvaOPM
         public bool PowerOk { get { return OnAc && !ChargerWeak; } }
     }
 
-    /// <summary>OGH's IsBatteryDrain rule (Entry.PowerEvent, docs/firmware.md), evaluated on every power event.</summary>
+    /// <summary>OGH's IsBatteryDrain rule (Entry.PowerEvent, docs/what-it-does.md "Safety in Performance"), evaluated on every power event.</summary>
     public sealed class DrainTracker
     {
         private bool _drain;

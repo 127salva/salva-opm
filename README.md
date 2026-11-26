@@ -3,7 +3,6 @@
 **Salva OPM** (OMEN Power Manager) is a Windows tray app that replaces OMEN Gaming Hub's performance control on one laptop, the HP OMEN 16-ap0 (board 8E35). It switches between three power modes, shows the chip temperatures and fan speeds, and talks to the laptop's firmware directly through HP's BIOS WMI interface. The fans stay on the firmware's own curve.
 
 [![CI](https://github.com/127salva/salva-opm/actions/workflows/ci.yml/badge.svg)](https://github.com/127salva/salva-opm/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/127salva/salva-opm)](https://github.com/127salva/salva-opm/releases/latest)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
 ![The Salva OPM window in Balanced mode, from --demo (simulated readings)](docs/images/window.png)
@@ -53,7 +52,7 @@ The reasons behind each decision are in [docs/architecture.md](docs/architecture
 
 ## Testing
 - **Self-checks** (`src/SelfCheck.cs`): one assert-based suite, no framework. It covers the mode rules, the governor, the allow-list for every BIOS type 0–255 (no fan command passes), and the engine end to end against the simulator. It also runs 14 simulated days with random load, sleep, unplugging and failing BIOS calls, and checks the safety limits every 5 s. The build and CI stop on any failure.
-- **On the laptop:** what only real hardware can answer (the firmware's behaviour, install and uninstall, sleep, 8 hours in Performance) was checked by hand and read from the app's log. [docs/testing.md](docs/testing.md) shows, feature by feature, what was seen on the laptop and what was checked in the simulator only.
+- **On the laptop:** what only real hardware can answer (the firmware's behaviour, install and uninstall, sleep, long runs) was checked by hand and read from the app's log. [docs/testing.md](docs/testing.md) shows, feature by feature, what was seen on the laptop and what was checked in the simulator only.
 
 ## Install
 1. Download `SalvaOPM-Setup.exe` from the [latest release](https://github.com/127salva/salva-opm/releases/latest).

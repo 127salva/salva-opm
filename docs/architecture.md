@@ -62,7 +62,7 @@ All hardware work (every `Engine` call, the charger read, the identity check) ru
 | 45 s (not during the wait after Performance) | heartbeat: re-send profile (and Performance power); end OGH's background if it returned; retry a failed apply |
 
 ## Key design decisions
-- **The fans are the firmware's.** No fan command is on the allow-list (fan levels, type 46; their trigger, type 16; max fan, type 39), and every profile write sets byte 2 = 1, which hands the fans to the firmware's own curve (measured, `docs/firmware.md`). That also takes them back at start-up if an older version of the app was stopped while holding them. The app keeps to power modes and readings.
+- **The fans are the firmware's.** No fan command is on the allow-list (fan levels, type 46; their trigger, type 16; max fan, type 39), and every profile write sets byte 2 = 1, which hands the fans to the firmware's own curve (measured, `docs/firmware.md`). The app keeps to power modes and readings.
 - **Allow-list at the transport.** `FirmwareRules.IsAllowed` names every (command, type, input size, output size) the app may send. Both transports enforce it.
 - **Read-back, not return codes.** The firmware answers `0` to writes it ignores (measured), so power and GPU writes made while running are verified by a read (the exceptions: `docs/what-it-does.md`).
 - **The firmware is the fallback.** The firmware forgets host state (power limits, profile) about two minutes after the last refresh, so after a crash or a hang it takes them back by itself. The GPU record and concurrent TDP are the exceptions: they stay until the app starts again (see below).
@@ -83,7 +83,7 @@ All hardware work (every `Engine` call, the charger read, the identity check) ru
 - **License GPL-3.0-or-later**, as Ohman, whose logic it follows; adapted files say so in their header.
 
 ## State on disk
-`C:\ProgramData\SalvaOPM\state.txt` (key=value): saved mode, the concurrent-TDP baseline, the GPU record read before the first write (fan keys left by older versions are ignored and dropped at the next save). `log.txt` beside it holds events (256 KB, one rotation to `log.txt.old`); `running.flag` is there while the app runs (left behind by a crash) and `setup-result.txt` holds the last setup's message.
+`C:\ProgramData\SalvaOPM\state.txt` (key=value): saved mode, the concurrent-TDP baseline, the GPU record read before the first write. `log.txt` beside it holds events (256 KB, one rotation to `log.txt.old`); `running.flag` is there while the app runs (left behind by a crash) and `setup-result.txt` holds the last setup's message.
 
 ## Source of the firmware facts
 `docs/firmware.md` says how each call, value and behaviour was established: decoded from OGH, taken from Ohman or the Linux `hp-wmi` driver, or measured on the laptop.

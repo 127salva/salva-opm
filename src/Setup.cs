@@ -28,7 +28,7 @@ namespace SalvaOPM
     public static class Setup
     {
         public const string TaskName = "SalvaOPM";
-        public const string Version = "1.0.0";
+        public const string Version = "3.0.1";
         public const string Home = "https://github.com/127salva/salva-opm";
         public const string PawnIoUrl = "https://github.com/namazso/PawnIO.Setup/releases/download/2.2.0/PawnIO_setup.exe";
         public const string PawnIoSha256 = "1F519A22E47187F70A1379A48CA604981C4FCF694F4E65B734AAA74A9FBA3032";

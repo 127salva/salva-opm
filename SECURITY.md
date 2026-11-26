@@ -1,7 +1,7 @@
 # Security
 
 ## Reporting a problem
-Use GitHub's private reporting on this repository: **Security → Report a vulnerability**. Please do not open a public issue for something that could harm a machine. Include the version, what you observed and, if you can, `C:\ProgramData\SalvaOPM\log.txt`.
+Use GitHub's private reporting on this repository: **Security → Report a vulnerability**. Please do not open a public issue for something that could harm a machine. Include what you observed and, if you can, `C:\ProgramData\SalvaOPM\log.txt`.
 
 ## What the app does with its privileges
 The app runs elevated (a logon task with highest privileges) because the HP BIOS interface and the PawnIO driver require it.

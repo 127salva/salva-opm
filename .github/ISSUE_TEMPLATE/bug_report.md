@@ -11,7 +11,7 @@ labels: bug
 **Steps**
 
 **Version and machine**
-- Salva OPM version (Settings > Apps > Salva OPM, or the last `installed` line in the log):
+- When it was installed (the last `installed` line in the log):
 - Model, board, BIOS (first `identity:` line in the log):
 
 **Log**

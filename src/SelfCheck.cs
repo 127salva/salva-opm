@@ -93,7 +93,6 @@ namespace SalvaOPM
             return new double[] { 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s, 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s };
         }
 
-
         private static int Find(List<string> log, string needle, int from)
         {
             for (int i = from; i < log.Count; i++) if (log[i].IndexOf(needle, StringComparison.Ordinal) >= 0) return i;
@@ -375,7 +374,6 @@ namespace SalvaOPM
                 "CPU temperature: bits 31:21 in eighths of a degree, -49 C with the range bit, nothing outside 0..130");
         }
 
-
         // ---------------------------------------------------------------- end-to-end (Engine + simulator)
 
         private static void CoreTests()
@@ -385,6 +383,10 @@ namespace SalvaOPM
                 && r.Win.Last == Mode.Balanced && r.Core.Fault == null, "boot Balanced on AC: profile 0x30 with the firmware's fans; no fault shown");
             Check(Engine.Same(r.Sim.Gpu, HpBios.GpuBoost) && Engine.Same(r.St.FactoryGpu, new byte[] { 0, 1, 0, 87 }) && Engine.Same(Settings.Load(r.Dir).FactoryGpu, new byte[] { 0, 1, 0, 87 }),
                 "Balanced = GPU Boost; the record read first is kept for uninstall");
+            Rig odd0 = new Rig(); odd0.Sim.Gpu = new byte[] { 0, 1, 2, 87 };   // a record no write may give back (dState 2)
+            odd0.Core.Boot(true, 0); odd0.Core.Select(Mode.Eco, 0);
+            Check(HpBios.IsLegalGpu(odd0.St.FactoryGpu) && Engine.Same(Settings.Load(odd0.Dir).FactoryGpu, odd0.St.FactoryGpu),
+                "an out-of-range first GPU record is not kept for uninstall; the first one it can write back is");
             int a = Find(r.Sim.Log, "type 26 in FF-30-01-00", 0), gw = Find(r.Sim.Log, "type 34", 0);
             Check(a >= 0 && gw > a, "apply order is Ohman's: profile -> GPU");
 
@@ -645,7 +647,6 @@ namespace SalvaOPM
             r.Unplug(now); r.Plug(now); r.Core.Resume(true, now); r.Core.Exit();
             Check(refused && Writes(r.Sim.Log, mark) == 0 && r.Sim.HostPl1 == 0, "fail safe: 10 min and every later event without one write; the old limit lapsed");
         }
-
 
         // ---------------------------------------------------------------- endurance (E1)
 
