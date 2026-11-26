@@ -1269,7 +1269,8 @@ namespace SalvaOPM
             System.Reflection.AssemblyFileVersionAttribute fileVersion = (System.Reflection.AssemblyFileVersionAttribute)Attribute.GetCustomAttribute(typeof(Setup).Assembly, typeof(System.Reflection.AssemblyFileVersionAttribute));
             System.Reflection.AssemblyTitleAttribute title = (System.Reflection.AssemblyTitleAttribute)Attribute.GetCustomAttribute(typeof(Setup).Assembly, typeof(System.Reflection.AssemblyTitleAttribute));
             System.Reflection.AssemblyCopyrightAttribute copyright = (System.Reflection.AssemblyCopyrightAttribute)Attribute.GetCustomAttribute(typeof(Setup).Assembly, typeof(System.Reflection.AssemblyCopyrightAttribute));
-            Check(fileVersion != null && fileVersion.Version == Setup.Version && title != null && title.Title == "Salva OPM"
+            Check(fileVersion != null && fileVersion.Version == Setup.Version && typeof(Setup).Assembly.GetName().Version.ToString(3) == Setup.Version
+                && title != null && title.Title == "Salva OPM"
                 && copyright != null && copyright.Copyright == "Copyright (C) 2026 127salva",
                 "the exe's Properties show its name, version (Setup.Version) and copyright");
             // the setup window: the name's capitals on the logo's centre line and nothing after it (no version); every result in the list's place

@@ -15,6 +15,7 @@ using System.Windows.Forms;
 [assembly: System.Reflection.AssemblyProduct("Salva OPM")]
 [assembly: System.Reflection.AssemblyCompany("127salva")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (C) 2026 127salva")]
+[assembly: System.Reflection.AssemblyVersion(SalvaOPM.Setup.Version)]
 [assembly: System.Reflection.AssemblyFileVersion(SalvaOPM.Setup.Version)]
 [assembly: System.Reflection.AssemblyInformationalVersion(SalvaOPM.Setup.Version)]
 
