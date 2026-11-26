@@ -8,7 +8,7 @@ The app runs elevated (a logon task with highest privileges) because the HP BIOS
 
 | Area | Practice |
 |---|---|
-| Firmware calls | Only the pairs in `FirmwareRules` (`src/Firmware.cs`) can be sent; a self-check proves nothing else passes. Values are range-checked. No fan command is on the list. Power and GPU writes made while the app runs are read back; writes on the way out (leaving Performance, fail safe, start-up TDP repair, uninstall) are not read back; the heartbeat's re-send of Performance power is checked by the next heartbeat. |
+| Firmware calls | Only the pairs in `FirmwareRules` (`src/Firmware.cs`) can be sent; a self-check proves nothing else passes. Values are range-checked. No fan command is on the list. Power and GPU writes made while the app runs are read back (the exceptions: `docs/what-it-does.md`). |
 | Wrong hardware | Anything but an OMEN 16-ap0 with board `8E35`: the setup refuses to install. If the identity does not match when the app starts (or cannot be read): the app says so and closes before any firmware call. |
 | Kernel driver | PawnIO's official signed build. The app loads one signed module and calls one read function (`ioctl_read_smn`). No port, MSR or EC access. |
 | PawnIO installer | Not shipped. The setup downloads the pinned release over HTTPS into memory, checks its SHA-256 (`Setup.PawnIoSha256`), writes it to the administrators-only data folder and runs it from there, so no user-level process can swap it after the check. |
@@ -22,7 +22,7 @@ The app runs elevated (a logon task with highest privileges) because the HP BIOS
 | Secrets | The project has none: no keys, tokens or accounts. |
 
 ## Known limits
-- The setup and the app are **not code-signed**. Windows SmartScreen may warn; compare the file's SHA-256 (`Get-FileHash`) with the one published with the release.
+- The setup and the app are **not code-signed**. Windows SmartScreen may warn.
 - The setup run from Downloads loads the .NET runtime before its own code can restrict DLL loading; keep that folder free of files you do not trust.
 - The window runs elevated together with the engine (no separate unprivileged UI).
 - Firmware behaviour was verified on BIOS `F.13` only. After a BIOS update the app warns; use it with care until it has been checked on that BIOS.

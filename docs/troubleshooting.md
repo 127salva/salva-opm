@@ -26,8 +26,6 @@ Hover the pill (the "i") to see what to do; it is the last column below.
 
 **Salva OPM says it only runs on the OMEN 16-ap0 and closes.** The model or board did not match, or the identity could not be read at start-up. Nothing was written. On the right laptop, sign out and in; if it repeats, send `log.txt` (line `refused to run`).
 
-**`Stopped after an error`, red tray icon.** Something failed that the app did not expect. It put profile `0x30` back and writes nothing more to the firmware. Exit from the tray, open Salva OPM from the Start menu, and send `log.txt` if it happens again.
-
 **The window closed by itself, with a tray message.** The window hit an error (logged as `window error:`). The app and its power modes keep running; open the window again from the tray. Send `log.txt` if it repeats.
 
 **The window does not open.** Use the tray icon or the Start-menu entry. If the app is not running, sign out and in, or run the setup → Update.

@@ -8,8 +8,6 @@
 
 ![The Salva OPM window in Balanced mode, from --demo (simulated readings)](docs/images/window.png)
 
-*The window, from `--demo` (simulated firmware and sensors).*
-
 > [!WARNING]
 > It writes to the laptop's firmware and was built and tested on one laptop only (OMEN 16-ap0xxx, BIOS F.13). On any other model the setup refuses to install and the app refuses to run. It is a personal tool, provided as is with no warranty ([LICENSE](LICENSE)). The firmware's own thermal protections always stay in charge.
 
@@ -51,7 +49,7 @@ The reasons behind each decision are in [docs/architecture.md](docs/architecture
 | CPU temperature | [PawnIO](https://pawnio.eu) driver with its signed `AMDFamily17` module |
 | GPU temperature | NVIDIA `nvml.dll` |
 | Start at logon | Task Scheduler task with highest privileges (COM) |
-| CI | GitHub Actions on `windows-latest`: build, self-checks, SHA-256 of the setup |
+| CI | GitHub Actions on `windows-latest`: build and self-checks |
 
 ## Testing
 - **Self-checks** (`src/SelfCheck.cs`): one assert-based suite, no framework. It covers the mode rules, the governor, the allow-list for every BIOS type 0–255 (no fan command passes), and the engine end to end against the simulator. It also runs 14 simulated days with random load, sleep, unplugging and failing BIOS calls, and checks the safety limits every 5 s. The build and CI stop on any failure.
@@ -59,12 +57,11 @@ The reasons behind each decision are in [docs/architecture.md](docs/architecture
 
 ## Install
 1. Download `SalvaOPM-Setup.exe` from the [latest release](https://github.com/127salva/salva-opm/releases/latest).
-2. Check it in PowerShell: `Get-FileHash .\SalvaOPM-Setup.exe` must print the SHA-256 published with the release.
-3. Run it, choose **Install** and approve the administrator prompt.
+2. Run it, choose **Install** and approve the administrator prompt.
 
-The exe is not code-signed, so SmartScreen warns about an unknown publisher ("More info", then "Run anyway"). Compare the hash first.
+The exe is not code-signed, so SmartScreen warns about an unknown publisher ("More info", then "Run anyway").
 
-The setup installs the PawnIO driver when it is missing or older than 2.2.0 (downloaded once from its official release, hash-checked) and **removes OMEN Gaming Hub**. Run the setup again to update or uninstall. Uninstall puts the firmware back and removes the app. It does not reinstall OMEN Gaming Hub (get it from the Microsoft Store). The full list of steps is in [docs/what-it-does.md](docs/what-it-does.md).
+The setup installs the PawnIO driver when it is missing or older than 2.2.0 (downloaded once from its official release, hash-checked) and **removes OMEN Gaming Hub**. Run the setup again to update or uninstall. Uninstall puts the firmware back and removes the app. It does not reinstall OMEN Gaming Hub (get it from the Microsoft Store). The full list of steps is in [docs/what-it-does.md](docs/what-it-does.md); warnings and recovery in [docs/troubleshooting.md](docs/troubleshooting.md).
 
 ## Build and run without hardware
 Requirements: Windows 11, or Windows 10 1903 or later, x64. Nothing to install.
@@ -81,7 +78,7 @@ dist\SalvaOPM-Setup.exe --demo
 | `build.cmd app` | builds only the setup exe |
 | `SalvaOPM-Setup.exe --demo` | the whole app against the simulator; no administrator rights, no Windows setting changed |
 
-Other switches: `--selftest`, `--check` (prerequisites), `--read` and `--dry-run [minutes]` (read-only, administrator). The exe is a GUI program: in PowerShell, pipe it to `Out-Host` to see the output and keep the exit code (`& .\dist\SalvaOPM-Setup.exe --selftest | Out-Host`).
+Other switches: `--selftest`, `--check` (prerequisites), `--read` and `--dry-run [minutes]` (read-only, administrator).
 
 ## Repository layout
 ```
@@ -92,15 +89,6 @@ docs/          what it does, architecture, firmware facts, testing, troubleshoot
 .github/       CI workflow, bug report template
 build.cmd      the build
 ```
-
-## Documentation
-| Document | For |
-|---|---|
-| [docs/what-it-does.md](docs/what-it-does.md) | everything the app touches, mode by mode |
-| [docs/architecture.md](docs/architecture.md) | modules, timing, design decisions |
-| [docs/firmware.md](docs/firmware.md) | how each firmware fact was found |
-| [docs/testing.md](docs/testing.md) | the self-checks and how each feature was checked |
-| [docs/troubleshooting.md](docs/troubleshooting.md) | warnings, logs, recovery |
 
 ## Credits and license
 - The logic for the power presets, the heartbeat and OMEN Gaming Hub handling follows [Ohman](https://github.com/P4R1H/Ohman) (GPL-3.0-or-later); files with adapted code say so in their header.
